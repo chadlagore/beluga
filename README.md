@@ -26,9 +26,7 @@ make dev    # Enter dev container and mount this repository.
 ## :shipit: Deployment
 
 
-We will use a deploy bot on DockerHub to push the image.
-
-To deploy locally,
+We will use a deploy bot on DockerHub to push the image. To deploy locally,
 
 ```
 make push-prod
