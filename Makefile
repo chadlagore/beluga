@@ -1,6 +1,6 @@
 # Image names
-PROD_IMAGE_NAME=impala-beluga-prod
-DEV_IMAGE_NAME=impala-beluga-dev
+PROD_IMAGE_NAME=beluga-prod
+DEV_IMAGE_NAME=beluga-dev
 ORGANIZATION=chadlagore
 TAG=latest
 

@@ -1,4 +1,4 @@
-FROM impala-beluga-prod:latest
+FROM beluga-prod:latest
 
 # Install production dependencies.
 ADD requirements.txt /env/requirements-dev.txt

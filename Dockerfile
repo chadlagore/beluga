@@ -5,10 +5,10 @@ ADD requirements.txt /env/requirements.txt
 RUN pip install -r /env/requirements.txt
 
 # Add application to container.
-ADD impala_beluga /app/impala_beluga/
+ADD beluga /app/beluga/
 
 WORKDIR /app/
 
 ENTRYPOINT [ "python3" ]
 
-CMD [ "impala_beluga/app.py" ]
+CMD [ "beluga/app.py" ]

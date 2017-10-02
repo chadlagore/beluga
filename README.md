@@ -1,4 +1,4 @@
-impala-beluga
+beluga
 ===================
 
 Event tracking, rating and prioritizing for your event going pleasure.
