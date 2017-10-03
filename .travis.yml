@@ -5,8 +5,3 @@ services:
 
 script:
   - make
-
-after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-    make push-prod;
-    fi
