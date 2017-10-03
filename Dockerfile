@@ -1,4 +1,4 @@
-FROM python:3.6.2-slim
+FROM python:3.6.2-jessie
 
 # Install production dependencies.
 ADD requirements.txt /env/requirements.txt

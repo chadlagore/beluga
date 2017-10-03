@@ -1,13 +1,13 @@
-from aiohttp import web
-from routes import setup_routes
+from sanic import Sanic
+from sanic.response import json
+
+app = Sanic()
 
 
-# Create the application.
-app = web.Application()
+@app.route("/")
+async def test(request):
+    return json({"hello": "async world"})
 
-# Setup our routes.
-setup_routes(app)
 
-# Run the app.
-if __name__ == '__main__':
-    web.run_app(app, host='0.0.0.0', port=80)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80, workers=4)
