@@ -31,7 +31,6 @@ run:
 		$(PROD_IMAGE_NAME)
 
 dev:
-	@echo "Opening dev environment on localhost port $(DEV_PORT)."
 	docker rm -f $(DEV_CONTAINER) 2>> /dev/null || true
 	docker run -it \
 		--name $(DEV_IMAGE_NAME) \
