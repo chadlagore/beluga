@@ -26,6 +26,7 @@ run:
 	docker rm -f $(PROD_CONTAINER) 2>> /dev/null || true
 	docker run -it \
 		--name $(PROD_IMAGE_NAME) \
+		-v `pwd`/beluga:/app/beluga \
 		-p $(PROD_PORT):$(PROD_PORT) \
 		$(PROD_IMAGE_NAME)
 
