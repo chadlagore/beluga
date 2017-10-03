@@ -26,11 +26,5 @@ make dev    # Enter dev container and mount this repository.
 ## :shipit: Deployment
 
 
-We will use a deploy bot on DockerHub to push the image. To deploy locally,
-
-```
-make push-prod
-```
-
-You will need to set `DOCKER_USERNAME` and `DOCKER_PASSWORD` in your
-environment.
+The production `Dockerfile` gets pulled and built from the master
+branch by DockerHub.
