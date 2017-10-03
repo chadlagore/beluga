@@ -1,0 +1,3 @@
+# Development dependencies.
+# None of these end up in the production image.
+pytest==3.2.2
