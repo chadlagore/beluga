@@ -6,8 +6,8 @@ import beluga.config as config
 from beluga.routes import (
     healthcheck,
     get_self, 
-    get_event,
-    rsvp
+    event_handler,
+    rsvp_handler
 )
 
 
@@ -21,5 +21,5 @@ app.add_route(get_self, "/users/self", ['GET'])
 
 
 # Event routes.
-app.add_route(get_event, "/events", ['GET', ])
-app.add_route(rsvp, "/events/<uuid>/rsvp", ['POST', 'DELETE'])
+app.add_route(event_handler, "/events", ['GET', ])
+app.add_route(rsvp_handler, "/events/<uuid>/rsvp", ['POST', 'DELETE'])

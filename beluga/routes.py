@@ -8,41 +8,39 @@ from beluga.auth import authorized
 
 # Basic routes.
 async def healthcheck(request):
-    return json({"hello": "async worldiasdasd"})
+    return json({"hello": "async world"})
 
 
 # User routes.
 @authorized()
 async def get_self(request):
-    raise NotFound('not implemented')
+    raise NotFound('get_self not implemented')
 
 
 # Event routes.
 @authorized()
-async def get_event(request):
-    raise NotFound('not implemented')
+async def event_handler(request):
+    raise NotFound('event_handler not implemented')
 
 
 @authorized()
-async def rsvp(request, uuid):
-    success = await delete_rsvp_handler(request, uuid)
-    return json({"rsvp_deleted": deleted})
+async def rsvp_handler(request, uuid):
+    raise NotFound('rsvp_handler not implemented')
 
 
-async def delete_rsvp_handler(request, uuid):
+async def delete_rsvp(token, uuid):
     """
     DELETE RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to False.
     """
-    # stub
-    return {'deleted': True}
+    return True
 
 
-async def post_rsvp_handler(uuid):
+async def post_rsvp(token, uuid):
     """
     DELETE RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to True.
     """
-    return {'rsvped': True}
+    return True
