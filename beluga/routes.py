@@ -28,6 +28,7 @@ async def rsvp_handler(request, uuid):
     raise NotFound('rsvp_handler not implemented')
 
 
+# Helper functions
 async def delete_rsvp(token, uuid):
     """
     DELETE RSVP handler.

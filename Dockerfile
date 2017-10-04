@@ -6,7 +6,6 @@ RUN pip install -r /env/requirements.txt
 
 # Add application to container.
 ADD beluga /app/beluga/
-ADD main.py /app/
 
 WORKDIR /app/
 
@@ -14,6 +13,7 @@ WORKDIR /app/
 CMD gunicorn \
     --reload \
     --bind 0.0.0.0:80 \
+    --workers 4 \
     --worker-class \
     sanic_gunicorn.Worker \
     beluga:app
