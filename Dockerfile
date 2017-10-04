@@ -6,9 +6,14 @@ RUN pip install -r /env/requirements.txt
 
 # Add application to container.
 ADD beluga /app/beluga/
+ADD main.py /app/
 
 WORKDIR /app/
 
-ENTRYPOINT [ "python3" ]
-
-CMD [ "beluga/app.py" ]
+# Hot reload on app from code modifications.
+CMD gunicorn \
+    --reload \
+    --bind 0.0.0.0:80 \
+    --worker-class \
+    sanic_gunicorn.Worker \
+    beluga:app
