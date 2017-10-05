@@ -7,11 +7,10 @@ def authorized():
 
     Example:
 
-    @app.route("/")
-    @authorized()
-    async def test(request):
-        return json({status: 'authorized'})
-
+        @app.route("/")
+        @authorized()
+        async def test(request):
+            return json({status: 'authorized'})
     """
     def decorator(f):
         @wraps(f)
