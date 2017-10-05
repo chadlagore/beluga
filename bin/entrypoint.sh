@@ -12,7 +12,7 @@ else
     echo "Running for development."
     gunicorn \
         --reload \
-        --bind 127.0.0.1:80 \
+        --bind 0.0.0.0:8080 \
         --worker-class \
         sanic_gunicorn.Worker \
         beluga:app

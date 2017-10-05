@@ -23,7 +23,7 @@ run-dev:
 	docker run -it \
 		--name $(PROD_IMAGE_NAME) \
 		-v `pwd`:/app \
-		-p $(PROD_PORT):$(PROD_PORT) \
+		-p $(DEV_PORT):$(DEV_PORT) \
 		$(PROD_IMAGE_NAME)
 
 run-prod:
