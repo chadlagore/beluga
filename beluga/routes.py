@@ -30,8 +30,7 @@ async def rsvp_handler(request, uuid):
 
 # Helper functions
 async def delete_rsvp(token, uuid):
-    """
-    DELETE RSVP handler.
+    """DELETE RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to False.
     """
@@ -39,8 +38,7 @@ async def delete_rsvp(token, uuid):
 
 
 async def post_rsvp(token, uuid):
-    """
-    DELETE RSVP handler.
+    """DELETE RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to True.
     """
