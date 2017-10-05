@@ -28,3 +28,12 @@ make dev    # Enter dev container and mount this repository.
 
 The production `Dockerfile` gets pulled and built from the master
 branch by DockerHub.
+
+
+## :books: Docs
+
+```bash
+npm install apidoc -g
+apidoc -i beluga/ -o docs
+python -m SimpleHTTPServer
+```
