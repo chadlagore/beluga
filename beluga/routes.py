@@ -35,7 +35,7 @@ async def delete_rsvp(token, uuid):
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to False.
     """
-    return True
+    pass
 
 
 async def post_rsvp(token, uuid):
@@ -44,4 +44,4 @@ async def post_rsvp(token, uuid):
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to True.
     """
-    return True
+    pass

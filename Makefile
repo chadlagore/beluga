@@ -16,7 +16,7 @@ DEV_PORT=8080
 
 .PHONY: all run build-prod
 
-all: build-prod build-dev
+all: build-prod
 
 run:
 	docker rm -f $(PROD_CONTAINER) 2>> /dev/null || true
