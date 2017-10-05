@@ -1,4 +1,4 @@
-FROM beluga-prod:latest
+FROM beluga:latest
 
 # Install production dependencies.
 ADD requirements.txt /env/requirements-dev.txt
