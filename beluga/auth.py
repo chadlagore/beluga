@@ -3,8 +3,7 @@ from sanic.response import json
 
 
 def authorized():
-    """
-    A decorator for authorization.
+    """A decorator for authorization.
 
     Example:
 
@@ -31,8 +30,10 @@ def authorized():
 
 
 def check_request_for_auth_status(request):
-    """
-    Checks a request to see if the user is authenticated.
+    """Checks a request to see if the user is authenticated.
     This would likely check for a Bearer token.
+
+    Args:
+        request: the request from the client.
     """
     return True  # surrre you are.
