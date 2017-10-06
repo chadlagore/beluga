@@ -1,21 +1,27 @@
 from asyncio import AbstractEventLoop
 
-from sanic.exceptions import NotFound
+from sanic import Blueprint
+from sanic.exceptions import abort
 from sanic.response import json
 
 from beluga.auth import authorized
 
 
+api = Blueprint('api')
+
+
 # Basic routes.
+@api.route('/', ['GET'])
 async def healthcheck(request):
     return json({"hello": "async world"})
 
 
 # User routes.
 @authorized()
+@api.route('/users/self', ['GET'])
 async def get_self(request):
     """
-    @api {get} /user/self Retrieve the currently logged in user.
+    @api {get} /users/self Retrieve the currently logged in user.
     @apiName Self
     @apiGroup Users
 
@@ -25,11 +31,12 @@ async def get_self(request):
         the user.
     @apiSuccess {String} avatar A URL to an avatar image.
     """
-    raise NotFound('get_self not implemented')
+    raise abort(501, 'not implemented')
 
 
 # Event routes.
 @authorized()
+@api.route('/events', ['GET'])
 async def event_handler(request):
     """
     @api {get} /events Retrieve a listing of events.
@@ -59,10 +66,11 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
-    raise NotFound('event_handler not implemented')
+    raise abort(501, 'not implemented')
 
 
 @authorized()
+@api.route('/events/<uuid>/rsvp', ['POST', 'DELETE'])
 async def rsvp_handler(request, uuid):
     """
     @api {post} /events/:uuid/rsvp RSVP to an event.
@@ -91,7 +99,7 @@ async def rsvp_handler(request, uuid):
 
     @apiParam {Number} uuid Event unique ID.
     """
-    raise NotFound('rsvp_handler not implemented')
+    raise abort(501, 'not implemented')
 
 
 # Helper functions
