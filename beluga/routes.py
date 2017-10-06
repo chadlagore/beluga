@@ -44,7 +44,6 @@ async def event_handler(request):
                     the corresponding class must be provided (i.e. a search
                     area or temporal range must be fully specified).
 
-
     @apiParam {Number} lat Latitude component of the coordinates of
         the center of the search area..
     @apiParam {Number} lon Longitude component of the coordinates of
@@ -72,7 +71,6 @@ async def rsvp_handler(request, uuid):
                     by `uuid`. This endpoint does not accept a request body,
                     and does not produce any content. This operation is
                     idempotent.
-
 
     @apiName PostRSVP
     @apiGroup Events
