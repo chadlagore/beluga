@@ -28,3 +28,21 @@ make dev    # Enter dev container and mount this repository.
 
 The production `Dockerfile` gets pulled and built from the master
 branch by DockerHub.
+
+
+## :books: Docs
+
+We use [ApiDoc](http://apidocjs.com/).
+
+```bash
+npm install apidoc -g
+```
+
+To generate the docs and view them:
+
+```bash
+apidoc -i beluga/ -o docs
+python -m SimpleHTTPServer
+```
+
+Head to the `docs` folder.
