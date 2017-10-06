@@ -36,6 +36,15 @@ async def event_handler(request):
     @apiName Events
     @apiGroup Events
 
+    @apiDescription By default, this endpoint returns events ordered
+                    by start time, with events in the past omitted.
+                    Events may be filtered by search area, temporal
+                    range, or both. Note that if a search area or temporal
+                    range parameter is specified, all other parameters of
+                    the corresponding class must be provided (i.e. a search
+                    area or temporal range must be fully specified).
+
+
     @apiParam {Number} lat Latitude component of the coordinates of
         the center of the search area..
     @apiParam {Number} lon Longitude component of the coordinates of
@@ -57,11 +66,32 @@ async def event_handler(request):
 @authorized()
 async def rsvp_handler(request, uuid):
     """
-    @api {get} /events/:uuid/rsvp RSVP to an event (i.e. become an attendee).
-    @apiName RSVP
+    @api {post} /events/:uuid/rsvp RSVP to an event.
+
+    @apiDescription Make this user become an attendee of the event specified
+                    by `uuid`. This endpoint does not accept a request body,
+                    and does not produce any content. This operation is
+                    idempotent.
+
+
+    @apiName PostRSVP
     @apiGroup Events
 
-    @apiParam {Number} uuid Users unique ID.
+    @apiParam {Number} uuid Event unique ID.
+    """
+    """
+    @api {delete} /events/:uuid/rsvp Clear an RSVP to an event.
+
+    @apiDescription Remove this user as an attendee of the event specified by
+                    `uuid`. This endpoint does not accept a request body,
+                    and does not produce any content. This operation is
+                    idempotent.
+
+
+    @apiName DeleteRSVP
+    @apiGroup Events
+
+    @apiParam {Number} uuid Event unique ID.
     """
     raise NotFound('rsvp_handler not implemented')
 
@@ -76,7 +106,7 @@ async def delete_rsvp(token, uuid):
 
 
 async def post_rsvp(token, uuid):
-    """DELETE RSVP handler.
+    """POST RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to True.
     """
