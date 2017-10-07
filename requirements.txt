@@ -2,3 +2,5 @@ sanic==0.6.0
 sanic-gunicorn==0.1.2
 pytest==3.2.2
 aiohttp==2.2.5
+sqlalchemy==1.1.14
+psycopg2==2.7.3.1

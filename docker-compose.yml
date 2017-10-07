@@ -1,0 +1,21 @@
+version: '2'
+ 
+services:
+ webdev:
+   restart: always
+   environment:
+    DATABASE_URL: postgres://beluga:beluga@postgres:5432/test
+   build: .
+   expose:
+     - "8080"
+   volumes:
+     - .:/app/
+   depends_on:
+     - postgres
+  
+ postgres:
+   build:
+    context: .
+    dockerfile: ./postgres/postgres.Dockerfile
+   ports:
+     - "5432:5432"

@@ -1,5 +1,5 @@
 import os
 
 
-PORT = os.getenv('PORT', 80)
-WORKERS = os.getenv('WORKERS', 4)
+# Environment we need to collect.
+DATABASE_URL = os.environ.get('DATABASE_URL')

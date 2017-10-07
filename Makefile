@@ -22,6 +22,7 @@ run-dev:
 	docker rm -f $(PROD_CONTAINER) 2>> /dev/null || true
 	docker run -it \
 		--name $(PROD_IMAGE_NAME) \
+		--env-file ./.env \
 		-v `pwd`:/app \
 		-p $(DEV_PORT):$(DEV_PORT) \
 		$(PROD_IMAGE_NAME)
