@@ -37,3 +37,9 @@ run-prod:
 
 build-prod:
 	docker build --rm -t $(PROD_IMAGE_NAME) .
+
+test:
+	# Swap image if we put dev image back in.
+	docker run \
+		-v `pwd`:/app \
+		$(PROD_IMAGE_NAME) pytest -v
