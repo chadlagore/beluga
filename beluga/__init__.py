@@ -35,11 +35,12 @@ async def log_uri(request):
     app.logger.info("URI called: {0}".format(request.url))
 
 
-@app.listener('before_server_start')
-async def before_server_start(app, loop):
-    app.logger.info("Initializing database.... ")
-    async with create_engine(connection) as engine:
-        init_db()
+# Async approach.....
+# @app.listener('before_server_start')
+# async def before_server_start(app, loop):
+#     app.logger.info("Initializing database.... ")
+#     async with create_engine(connection) as engine:
+#         init_db()
 
 
 @app.listener('after_server_stop')
@@ -48,16 +49,8 @@ async def after_server_stop(app, loop):
     db_session.remove()
 
 
-# Setup logging.
-logging_format = "[%(asctime)s] %(process)d-%(levelname)s "
-logging_format += "%(module)s::%(funcName)s():l%(lineno)d: "
-logging_format += "%(message)s"
-logging.basicConfig(
-    format=logging_format,
-    level=logging.DEBUG)
-    
 # Final configurations and logging.
+logging.basicConfig(level=logging.DEBUG)
 app.logger = logging.getLogger()
-init_db()
-app.logger.info()
 app.blueprint(api)
+init_db()
