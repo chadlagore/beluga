@@ -34,5 +34,5 @@ class Event(Base):
 
     def __str__(self):
         return '<[{}] Event {} {}>'.format(
-            self.id, self.given_name, self.surname
+            self.id, self.title
         )
