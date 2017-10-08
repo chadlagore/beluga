@@ -33,6 +33,6 @@ class Event(Base):
     attendees = sa.Column(sa.types.JSON)
 
     def __str__(self):
-        return '<[{}] Event {} {}>'.format(
+        return '<[{}] Event {}>'.format(
             self.id, self.title
         )
