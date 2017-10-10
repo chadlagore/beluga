@@ -6,7 +6,7 @@ Event tracking, rating and prioritizing for your event going pleasure.
 
 ## :running: Getting Started
 
-You will need Docker Compose(`pip uninstall docker-compose`).
+You will need Docker Compose(`pip install docker-compose`).
 
 ```bash
 docker-compose up  # Or docker-compose start for background.
