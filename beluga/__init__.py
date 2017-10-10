@@ -26,11 +26,6 @@ Base = declarative_base()
 Base.query = db_session.query_property()
 
 
-def init_db():
-    import beluga.models
-    Base.metadata.create_all(bind=engine)
-
-
 @app.middleware("request")
 async def log_uri(request):
     # Simple middleware to log the URI endpoint that was called
@@ -41,7 +36,9 @@ async def log_uri(request):
 @app.listener('before_server_start')
 async def before_server_start(app, loop):
     app.logger.info("Initializing database.... ")
-    init_db()
+    import beluga.models
+    Base.metadata.create_all(bind=engine)
+    app.logger.info("Database up.")
 
 
 @app.listener('after_server_stop')
