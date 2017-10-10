@@ -8,7 +8,12 @@ def test_write_event():
     event = Event(
         title='So much good stuff',
         start_time=dt.datetime(2016, 5, 5, 1, 2),
-        end_time=dt.datetime(2016, 5, 5, 1, 7)
+        end_time=dt.datetime(2016, 5, 5, 1, 7),
+        location={
+            'lat': 1, 
+            'lon': 2, 
+            'title': 'location title'
+        }
     )
 
     db_session.add(event)
