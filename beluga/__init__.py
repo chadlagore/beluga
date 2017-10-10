@@ -42,13 +42,6 @@ async def log_uri(request):
     app.logger.info("URI called: {0}".format(request.url))
 
 
-# Async approach.....
-@app.listener('before_server_start')
-async def before_server_start(app, loop):
-    app.logger.info("Initializing database.... ")
-    app.logger.info("Database up.")
-
-
 @app.listener('after_server_stop')
 async def after_server_stop(app, loop):
     app.logger.info("Closing database pool")
