@@ -26,8 +26,8 @@ class Event(Base):
     __tablename__ = 'events'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    start_time = sa.Column(sa.String(75))
-    end_time = sa.Column(sa.String(75))
+    start_time = sa.Column(sa.types.DateTime())
+    end_time = sa.Column(sa.types.DateTime())
     location = sa.Column(sa.types.JSON)
     title = sa.Column(sa.String(200))
     attendees = sa.Column(sa.types.JSON)

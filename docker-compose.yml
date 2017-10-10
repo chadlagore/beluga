@@ -2,20 +2,21 @@ version: '2'
  
 services:
  webdev:
-   restart: always
    environment:
-    DATABASE_URL: postgres://beluga:beluga@postgres:5432/test
+    DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
    build: .
-   expose:
-     - "8080"
+   ports:
+     - "8080:8080"
    volumes:
      - .:/app/
    depends_on:
      - postgres
   
  postgres:
-   build:
-    context: .
-    dockerfile: ./postgres/postgres.Dockerfile
+   image: postgres
    ports:
      - "5432:5432"
+   environment:
+     POSTGRES_USER: beluga
+     POSTGRES_PASSWORD: beluga
+     POSTGRES_DB: beluga

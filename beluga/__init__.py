@@ -13,10 +13,12 @@ from beluga.utils import parse_database_url
 app = Sanic()
 app.config.from_object(config)
 
-logger = None
+logging.basicConfig(level=logging.INFO)
+app.logger = logging.getLogger(__name__)
 
 # Database setup.
-engine = create_engine(app.config.DATABASE_URL, convert_unicode=True)
+engine = create_engine(app.config.DATABASE_URL, 
+                       convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
                                          bind=engine))
@@ -48,9 +50,7 @@ async def after_server_stop(app, loop):
     app.logger.info("Closing database pool")
     db_session.remove()
 
-
-# Final configurations and logging.
-logging.basicConfig(level=logging.DEBUG)
-app.logger = logging.getLogger()
+app.logger.info("Initializing routes")
 app.blueprint(api)
+app.logger.info("Initializing database")
 init_db()
