@@ -9,7 +9,7 @@ Event tracking, rating and prioritizing for your event going pleasure.
 You will need Docker Compose(`pip uninstall docker-compose`).
 
 ```bash
-docker-compose up
+docker-compose up  # Or docker-compose start for background.
 ```
 
 ## :shipit: Deployment
@@ -37,5 +37,5 @@ Head to the `docs` folder.
 ## Testing
 
 ```bash
-make test
+docker-compose run webdev pytest -vvv
 ```
