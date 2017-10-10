@@ -1,7 +1,7 @@
 
 .PHONY: all run-dev build
 
-all: build-prod
+all: build
 
 run-dev:
 	docker-compose up

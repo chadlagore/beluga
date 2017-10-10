@@ -6,11 +6,11 @@ Event tracking, rating and prioritizing for your event going pleasure.
 
 ## :running: Getting Started
 
-You will need [Docker](https://docs.docker.com/docker-for-mac/install/).
+You will need Docker Compose(`pip uninstall docker-compose`).
 
 ```bash
-make            # Build containers.
-make run-dev    # Start server.
+make
+docker-compose up
 ```
 
 ## :shipit: Deployment
@@ -34,3 +34,9 @@ python -m SimpleHTTPServer
 ```
 
 Head to the `docs` folder.
+
+## Testing
+
+```bash
+make test
+```
