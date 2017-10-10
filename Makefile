@@ -3,11 +3,8 @@
 
 all: build
 
-run-dev:
+dev:
 	docker-compose up
-
-build:
-	docker build --rm -t $(PROD_IMAGE_NAME) .
 
 test:
 	docker-compose run webdev pytest -vvv

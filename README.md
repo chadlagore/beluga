@@ -9,7 +9,6 @@ Event tracking, rating and prioritizing for your event going pleasure.
 You will need Docker Compose(`pip uninstall docker-compose`).
 
 ```bash
-make
 docker-compose up
 ```
 
