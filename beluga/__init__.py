@@ -17,16 +17,22 @@ logging.basicConfig(level=logging.INFO)
 app.logger = logging.getLogger(__name__)
 
 # Database setup.
-engine = create_engine(app.config.DATABASE_URL,
-                       convert_unicode=True)
-db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
+engine = create_engine(
+    app.config.DATABASE_URL,
+    convert_unicode=True
+)
+db_session = scoped_session(
+    sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=engine
+    )
+)
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-# Create tables.
-import beluga.models
+# Create tables (import models after we create Base).
+import beluga.models  # noqa
 Base.metadata.create_all(bind=engine)
 
 
