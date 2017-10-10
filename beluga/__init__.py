@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 app.logger = logging.getLogger(__name__)
 
 # Database setup.
-engine = create_engine(app.config.DATABASE_URL, 
+engine = create_engine(app.config.DATABASE_URL,
                        convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
@@ -51,4 +51,3 @@ async def after_server_stop(app, loop):
 
 app.logger.info("Initializing routes")
 app.blueprint(api)
-app.logger.info("Initializing database")
