@@ -7,12 +7,12 @@ from sqlalchemy.ext.declarative import declarative_base
 
 import beluga.config as config
 from beluga.routes import api
-from beluga.utils import parse_database_url
 
 # Build app and configuration.
 app = Sanic()
 app.config.from_object(config)
 
+# Basic logging config.
 logging.basicConfig(level=logging.INFO)
 app.logger = logging.getLogger(__name__)
 
@@ -38,11 +38,10 @@ async def log_uri(request):
 
 
 # Async approach.....
-# @app.listener('before_server_start')
-# async def before_server_start(app, loop):
-#     app.logger.info("Initializing database.... ")
-#     async with create_engine(connection) as engine:
-#         init_db()
+@app.listener('before_server_start')
+async def before_server_start(app, loop):
+    app.logger.info("Initializing database.... ")
+    init_db()
 
 
 @app.listener('after_server_stop')
@@ -53,4 +52,3 @@ async def after_server_stop(app, loop):
 app.logger.info("Initializing routes")
 app.blueprint(api)
 app.logger.info("Initializing database")
-init_db()
