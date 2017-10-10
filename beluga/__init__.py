@@ -25,6 +25,10 @@ db_session = scoped_session(sessionmaker(autocommit=False,
 Base = declarative_base()
 Base.query = db_session.query_property()
 
+# Create tables.
+import beluga.models
+Base.metadata.create_all(bind=engine)
+
 
 @app.middleware("request")
 async def log_uri(request):
@@ -36,8 +40,6 @@ async def log_uri(request):
 @app.listener('before_server_start')
 async def before_server_start(app, loop):
     app.logger.info("Initializing database.... ")
-    import beluga.models
-    Base.metadata.create_all(bind=engine)
     app.logger.info("Database up.")
 
 
