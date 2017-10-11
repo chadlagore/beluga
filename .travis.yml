@@ -4,5 +4,4 @@ services:
   - docker
 
 script:
-  - make
-  - make test
+  - docker-compose run webdev pytest -vvv

@@ -1,0 +1,22 @@
+version: '3'
+ 
+services:
+ webdev:
+   environment:
+    DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
+   build: .
+   ports:
+     - "8080:8080"
+   volumes:
+     - .:/app/
+   depends_on:
+     - postgres
+  
+ postgres:
+   image: postgres
+   ports:
+     - "5432"
+   environment:
+     POSTGRES_USER: beluga
+     POSTGRES_PASSWORD: beluga
+     POSTGRES_DB: beluga

@@ -1,4 +1,5 @@
 *.pyc
+.cache
 
 # Documentation
 node_modules
