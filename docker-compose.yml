@@ -11,6 +11,8 @@ services:
      - .:/app/
    depends_on:
      - postgres
+     - redis
+     - worker
   
  postgres:
    image: postgres
@@ -20,3 +22,27 @@ services:
      POSTGRES_USER: beluga
      POSTGRES_PASSWORD: beluga
      POSTGRES_DB: beluga
+
+ redis:
+  image: redis
+  ports:
+    - "6479"
+
+ worker:
+   build:
+    context: .
+    dockerfile: ./worker/Dockerfile
+   volumes:
+      - ./beluga:/app/beluga
+      - ./worker:/app/worker
+   environment:
+    CELERY_RESULT_BACKEND: redis://redis:6379/0
+    CELERY_BROKER_URL: redis://redis:6379/0
+    EVENTBRITE_APP_KEY: ${EVENTBRITE_APP_KEY}
+   depends_on:
+    - redis
+    - postgres
+   command: celery -A worker:celery worker --loglevel=info
+   depends_on:
+     - postgres
+     - redis
