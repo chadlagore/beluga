@@ -29,6 +29,7 @@ services:
     - "6479"
 
  worker:
+   restart: "always"
    build:
     context: .
     dockerfile: ./worker/Dockerfile
@@ -39,10 +40,11 @@ services:
     CELERY_RESULT_BACKEND: redis://redis:6379/0
     CELERY_BROKER_URL: redis://redis:6379/0
     EVENTBRITE_APP_KEY: ${EVENTBRITE_APP_KEY}
+    DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
    depends_on:
     - redis
     - postgres
-   command: celery -A worker:celery worker --loglevel=info
+   command: ['celery', '-A', 'worker.celery', 'worker', '-l', 'INFO', '-B']
    depends_on:
      - postgres
      - redis

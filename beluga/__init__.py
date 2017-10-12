@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-import beluga.config as config
+from beluga import config
 from beluga.routes import api
 
 # Build app and configuration.
@@ -51,9 +51,3 @@ async def before_server_start(app, loop):
     app.logger.info("Initializing routes")
     app.blueprint(api)
     app.logger.info("Server configuration complete.")
-
-
-@app.listener('after_server_stop')
-async def after_server_stop(app, loop):
-    app.logger.info("Closing database pool")
-    db_session.remove()
