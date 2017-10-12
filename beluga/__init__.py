@@ -49,5 +49,7 @@ async def before_server_start(app, loop):
     import beluga.models  # noqa
     Base.metadata.create_all(bind=engine)
     app.logger.info("Initializing routes")
-    app.blueprint(api)
-    app.logger.info("Server configuration complete.")
+
+
+app.blueprint(api)
+app.logger.info("Server configuration complete.")
