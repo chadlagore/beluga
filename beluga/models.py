@@ -25,7 +25,12 @@ class Event(Base):
 
     __tablename__ = 'events'
 
-    id = sa.Column(sa.Integer, primary_key=True)
+    id = sa.Column(
+        sa.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
     start_time = sa.Column(sa.types.DateTime())
     end_time = sa.Column(sa.types.DateTime())
     location = sa.Column(sa.types.JSON)
