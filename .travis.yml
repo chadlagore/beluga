@@ -4,8 +4,8 @@ services:
   - docker
 
 install:
-  - sudo npm install apidoc -g
-  - sudo apidoc -i beluga/ -o docs
+  - npm install apidoc -g
+  - apidoc -i beluga/ -o docs
 
 script:
   - docker-compose run test pytest -vvv
