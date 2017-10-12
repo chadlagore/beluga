@@ -36,6 +36,12 @@ Head to the `docs` folder.
 
 ## Testing
 
+We use a separate image to run our tests (see 
+`tests/Dockerfile`). It still uses the `docker-compose` pattern,
+because we would like for it to access postgres and redis etc.
+
 ```bash
-docker-compose run webdev pytest -vvv
+docker-compose run test pytest -vvv
 ```
+
+It will not run during a call to `docker-compose up`.

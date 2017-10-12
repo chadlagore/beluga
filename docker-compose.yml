@@ -1,50 +1,67 @@
 version: '3'
  
 services:
- webdev:
-   environment:
-    DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
-   build: .
-   ports:
-     - "8080:8080"
-   volumes:
-     - .:/app/
-   depends_on:
-     - postgres
-     - redis
-     - worker
-  
- postgres:
-   image: postgres
-   ports:
-     - "5432"
-   environment:
-     POSTGRES_USER: beluga
-     POSTGRES_PASSWORD: beluga
-     POSTGRES_DB: beluga
+  webdev:
+    environment:
+      DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+    - .:/app/
+    depends_on:
+      - postgres
+      - redis
+      - worker
 
- redis:
-  image: redis
-  ports:
-    - "6479"
+  postgres:
+    image: postgres
+    ports:
+      - "5432"
+    environment:
+      POSTGRES_USER: beluga
+      POSTGRES_PASSWORD: beluga
+      POSTGRES_DB: beluga
 
- worker:
-   restart: "always"
-   build:
-    context: .
-    dockerfile: ./worker/Dockerfile
-   volumes:
+  redis:
+    image: redis
+    ports:
+      - "6479"
+
+  worker:
+    restart: "always"
+    build:
+      context: .
+      dockerfile: ./worker/Dockerfile
+    volumes:
       - ./beluga:/app/beluga
       - ./worker:/app/worker
-   environment:
-    CELERY_RESULT_BACKEND: redis://redis:6379/0
-    CELERY_BROKER_URL: redis://redis:6379/0
-    EVENTBRITE_APP_KEY: ${EVENTBRITE_APP_KEY}
-    DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
-   depends_on:
-    - redis
-    - postgres
-   command: ['celery', '-A', 'worker.celery', 'worker', '-l', 'INFO', '-B']
-   depends_on:
-     - postgres
-     - redis
+    environment:
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      EVENTBRITE_APP_KEY: ${EVENTBRITE_APP_KEY}
+      DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
+    depends_on:
+      - redis
+      - postgres
+    command: ['celery', '-A', 'worker.celery', 'worker', '-l', 'INFO', '-B']
+    depends_on:
+      - postgres
+      - redis
+
+  test:
+    build:
+      context: .
+      dockerfile: ./tests/Dockerfile
+    volumes:
+      - .:/app/
+    environment:
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      EVENTBRITE_APP_KEY: NOT_A_KEY
+      DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
+    command: /bin/true
+    depends_on:
+    depends_on:
+      - postgres
+      - redis
