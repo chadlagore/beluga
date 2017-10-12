@@ -13,9 +13,13 @@ script:
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
-      # Deploy to target.
       ./bin/deploy.sh $DEPLOY_TARGET;
-
-      # Create and push docs.
-      ./bin/push-docs.sh gcp;
     fi
+    
+deploy:
+  provider: gcs
+  access_key_id: $GCS_ACCESS_KEY
+  secret_access_key: $GCS_ACCESS_SECRET
+  bucket: "gs://beluga-docs/api"
+  acl: public-read
+  local-dir: docs
