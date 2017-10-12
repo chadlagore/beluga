@@ -4,9 +4,8 @@ services:
   - docker
 
 install:
-  - npm install apidoc -g
-  - pip install gsutil
-  - gcloud config set project eventador-181804
+  - sudo npm install apidoc -g
+  - sudo apidoc -i beluga/ -o docs
 
 script:
   - docker-compose run test pytest -vvv
