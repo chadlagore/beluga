@@ -105,4 +105,3 @@ def load_event(self, event_params):
     _, db_session = get_db_session()
     db_session.add(Event(**event_params))
     db_session.flush()
-
