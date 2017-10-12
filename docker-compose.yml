@@ -62,6 +62,6 @@ services:
       DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
     command: /bin/true
     depends_on:
-    depends_on:
       - postgres
       - redis
+      - webdev
