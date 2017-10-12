@@ -3,5 +3,19 @@ sudo: required
 services:
   - docker
 
+install:
+  - npm install apidoc -g
+  - pip install gsutil
+  - gcloud config set project eventador-181804
+
 script:
   - docker-compose run test pytest -vvv
+
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+      # Deploy to target.
+      ./bin/deploy.sh $DEPLOY_TARGET;
+
+      # Create and push docs.
+      ./bin/push-docs.sh gcp;
+    fi

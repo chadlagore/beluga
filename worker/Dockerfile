@@ -9,3 +9,5 @@ ADD worker/ /app/
 ADD beluga/ /app/
 
 WORKDIR /app/
+
+CMD celery -A worker.celery worker -l INFO -B
