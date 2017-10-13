@@ -16,10 +16,6 @@ if [ "$TRAVIS_BRANCH" = "master" ]; then
         heroku plugins:install heroku-docker
         heroku container:login
 
-        # Heroku likes this approach.
-        cp Dockerfile Dockerfile.web
-        cp worker/Dockerfile Dockerfile.worker
-
         # Push all containers to registry
         heroku container:push web worker \
             --recursive --app "$PRODUCTION_APP"

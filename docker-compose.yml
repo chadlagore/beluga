@@ -4,7 +4,9 @@ services:
   webdev:
     environment:
       DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     command: [
       "gunicorn", "--reload", "--bind", 
       "0.0.0.0:8080", "--worker-class",
@@ -37,7 +39,7 @@ services:
     restart: "always"
     build:
       context: .
-      dockerfile: ./worker/Dockerfile
+      dockerfile: Dockerfile.worker
     volumes:
       - ./beluga:/app/beluga
       - ./worker:/app/worker
