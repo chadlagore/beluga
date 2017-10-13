@@ -1,11 +1,10 @@
 sudo: required
+
 services:
-- docker
-install:
-- npm install apidoc -g
-- apidoc -i beluga/ -o docs
+  - docker
+
 script:
-- docker-compose run test pytest -vvv
+  - docker-compose run test pytest -vvv
 
 after_success:
-- ./bin/deploy.sh heroku
+  - ./bin/deploy.sh heroku
