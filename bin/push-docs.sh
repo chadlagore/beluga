@@ -1,5 +1,11 @@
+#!/bin/bash
+
+# For local use only.
+# Example usage: ./bin/push-docs.sh
+
 TARGET=$1
 
+# Push docs to GCP.
 if [ "$TARGET" = "gcp" ]; then
     apidoc -i beluga/ -o docs
     gsutil -m rsync -R docs gs://beluga-docs/api
