@@ -51,7 +51,6 @@ services:
     depends_on:
       - redis
       - postgres
-    command: ['celery', '-A', 'worker.celery', 'worker', '-l', 'INFO', '-B']
     depends_on:
       - postgres
       - redis
