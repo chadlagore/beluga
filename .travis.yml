@@ -9,16 +9,15 @@ install:
 
 script:
   - docker-compose run test pytest -vvv
-
-after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-      ./bin/deploy.sh $DEPLOY_TARGET;
-    fi
     
 deploy:
-  provider: gcs
-  access_key_id: $GCS_ACCESS_KEY
-  secret_access_key: $GCS_ACCESS_SECRET
-  bucket: "gs://beluga-docs/api"
-  acl: public-read
-  local-dir: docs
+  - provider: gcs
+      access_key_id: $GCS_ACCESS_KEY
+      secret_access_key: $GCS_ACCESS_SECRET
+      bucket: "gs://beluga-docs/api"
+      acl: public-read
+      local-dir: docs
+      branch: chad/#22-push-api-docs
+  - provider: heroku
+      api_key: $HEROKU_API_KEY
+      branch: chad/#22-push-api-docs
