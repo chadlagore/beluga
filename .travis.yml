@@ -11,14 +11,6 @@ script:
   - docker-compose run test pytest -vvv
     
 deploy:
-  - provider: gcs
-    access_key_id: $GCS_ACCESS_KEY
-    secret_access_key: $GCS_ACCESS_SECRET
-    bucket: "gs://beluga-docs/api"
-    acl: public-read
-    local-dir: docs
-    on:
-      branch: "chad/#22-push-api-docs"
   - provider: heroku
     api_key: $HEROKU_API_KEY
     on:
