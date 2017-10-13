@@ -9,5 +9,9 @@ ADD . /app/
 
 WORKDIR /app/
 
-# Entrypoint tests for production.
-CMD /app/bin/entrypoint.sh
+# Production entrypoint
+CMD gunicorn \
+    --bind 0.0.0.0:$PORT \
+    --workers 4 \
+    --worker-class sanic_gunicorn.Worker \
+    beluga:app

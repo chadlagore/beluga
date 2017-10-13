@@ -5,6 +5,11 @@ services:
     environment:
       DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
     build: .
+    command: [
+      "gunicorn", "--reload", "--bind", 
+      "0.0.0.0:8080", "--worker-class",
+      "sanic_gunicorn.Worker", "beluga:app"
+    ]
     ports:
       - "8080:8080"
     volumes:
