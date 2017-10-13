@@ -17,7 +17,8 @@ if [ "$TARGET" = "heroku" ]; then
     cp worker/Dockerfile Dockerfile.worker
 
     # Push all containers to registry
-    heroku container:push web worker --recursive
+    heroku container:push web worker \
+        --recursive --app "$PRODUCTION_APP"
 
 elif [ "$TARGET" = "gcp" ]; then
     echo "GCP deployment not implemented"
