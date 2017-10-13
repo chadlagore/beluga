@@ -7,4 +7,6 @@ script:
   - docker-compose run test pytest -vvv
 
 after_success:
-  - ./bin/deploy.sh heroku
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    ./bin/deploy.sh heroku
+    fi

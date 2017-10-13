@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# For travis use only.
+# For travis/local use.
 # Example usage: ./bin/deploy.sh heroku
 
 TARGET=$1
@@ -8,21 +8,21 @@ TARGET=$1
 set -e # Abort script at first error
 set -u # Disallow unset variables
 
-if [ "$TRAVIS_BRANCH" = "master" ]; then
-    if [ "$TARGET" = "heroku" ]; then
+if [ "$TARGET" = "heroku" ]; then
 
-        # Install the toolbelt, and the required plugin.
-        wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
-        heroku plugins:install heroku-docker
-        heroku container:login
+    # Install the toolbelt, and the required plugin.
+    # trues are so you can run this locally (you may
+    # already have the deps).
+    wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh || true
+    heroku plugins:install heroku-docker || true
+    heroku container:login
 
-        # Push all containers to registry
-        heroku container:push web worker \
-            --recursive --app "$PRODUCTION_APP"
+    # Push all containers to registry
+    heroku container:push web worker \
+        --recursive --app "$PRODUCTION_APP"
 
-    elif [ "$TARGET" = "gcp" ]; then
-        echo "GCP deployment not implemented"
-    else
-        echo "Usage: ./deploy.sh [target]"
-    fi;
+elif [ "$TARGET" = "gcp" ]; then
+    echo "GCP deployment not implemented"
+else
+    echo "Usage: ./deploy.sh [target]"
 fi;
