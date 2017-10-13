@@ -50,5 +50,5 @@ async def before_server_start(app, loop):
     Base.metadata.create_all(bind=engine)
 
 
-app.logger.info("Initializing routes")
 app.blueprint(api)
+app.logger.info("Routes initialized.")
