@@ -11,6 +11,7 @@ if [ "$TARGET" = "heroku" ]; then
     # Install the toolbelt, and the required plugin.
     wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
     heroku plugins:install heroku-docker
+    heroku container:login
 
     # Heroku likes this approach.
     cp Dockerfile Dockerfile.web
