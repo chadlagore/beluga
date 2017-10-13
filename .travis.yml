@@ -15,8 +15,3 @@ deploy:
   local-dir: docs
   on:
     branch: chad/#22-push-api-docs
-- provider: heroku
-  api_key:
-    secure: aavqmC8UxcJW42Y+HsTSqqY4kfWRO93J3eYjcj339AjPZ8Aw3ZDa03QSeasIGCfl7jQiaNuSeHWVXxvOnsD77mXdnSss3Ij9aQVyp4e6qv2l4rxS1+9SVzJCLQs7eHlovTzpyXHPVfgyOmw6yDybW+f+SBetUfCNepFAcm2NNgGLIqjC+Xd1WDiDKhLsCmppi7EtpoOz7bLzexTo8L/4ERF74umrKFJTYNRc/JPhFU2PVufBQyJ1HWx5xn1VUtfK6wJrmBWOlPvs3T8KHUMhkO8S7KXOX5HYoV2ZOp1Hrt2atuwtwKE/yChV4aLlr3hPbtKXlKxeAj82oNkrxC1pG9WCHTqGjDY6QP6DfCiqA8w+vtYCQ/njtnK33E+k2yQRpY07EoY2dlxr9INTaRR+cw/lP4geob5MmFyi03Dp/lzKOGhP5x7NKYUo5v9tIQabnatay5LsGEaypUiwPoss/wgVe/9DqPBgZ90tM2ztj6jyTYvlHkY8YkU/WXijK0bAYHhyLkwecYzg+6uzPd9zxhg12iYX4GcsxRjvBP0jk0AKjRKcAsMUJb1kgR4UTZKt24mJasGd2TIm0U3oAvrUqt/DKhSlPEO1S3X4he9HHbJxeiUrJugUWkwVqbUx9Lj6RdqnCcM89kybq0QvNe4EO7433TpZNxMXyq/3RdvudFs=
-  on:
-    branch: chad/#22-push-api-docs
