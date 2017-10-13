@@ -17,7 +17,7 @@ deploy:
       bucket: "gs://beluga-docs/api"
       acl: public-read
       local-dir: docs
-      branch: chad/#22-push-api-docs
+      branch: "chad/#22-push-api-docs"
   - provider: heroku
       api_key: $HEROKU_API_KEY
-      branch: chad/#22-push-api-docs
+      branch: "chad/#22-push-api-docs"
