@@ -8,4 +8,4 @@ script:
 - docker-compose run test pytest -vvv
 
 after_success:
-- ./bin/deploy.sh
+- ./bin/deploy.sh heroku
