@@ -80,6 +80,7 @@ def fetch_events(self, lat, lon, rad, **params):
             config.EVENTBRITE_DATE_FMT)
 
         new_event = dict(
+            id=event['id'],
             title=event['name']['text'],
             start_time=start,
             end_time=end,

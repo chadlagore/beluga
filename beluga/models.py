@@ -8,7 +8,7 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    id = sa.Column(sa.Integer, primary_key=True)
+    id = sa.Column(sa.BigInteger, primary_key=True)
     given_name = sa.Column(sa.String(75))
     surname = sa.Column(sa.String(75))
     logins = sa.Column(sa.types.JSON)
@@ -26,9 +26,8 @@ class Event(Base):
     __tablename__ = 'events'
 
     id = sa.Column(
-        sa.Integer,
-        primary_key=True,
-        autoincrement=True
+        sa.BigInteger,
+        primary_key=True
     )
 
     start_time = sa.Column(sa.types.DateTime())
