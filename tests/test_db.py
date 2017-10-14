@@ -1,7 +1,7 @@
 import datetime as dt
 
 from beluga.models import Event
-from beluga import db_session
+from beluga import session_scope
 from tests.utils import new_db
 
 
@@ -18,9 +18,10 @@ def test_write_event():
         }
     )
 
-    db_session.add(event)
-    db_session.flush()
+    with session_scope() as db_session:
+        db_session.add(event)
+        db_session.flush()
 
-    result = db_session.query(Event).one()
+        result = db_session.query(Event).one()
 
-    assert result == event
+        assert result == event
