@@ -47,7 +47,7 @@ def test_fetch_events(mock_load_event_delay):
 
 @new_db()
 def test_load_event():
-    """Enforce that load_event drops a new event into the 
+    """Enforce that load_event drops a new event into the
     database.
     """
     event = new_event_dict()
@@ -83,4 +83,3 @@ def test_events_dont_get_clobbered():
         result = db_session.query(Event).filter(Event.id == this_id).all()
         assert len(result) == 1
         assert result[0].attendees == event_with_attendees['attendees']
-

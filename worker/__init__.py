@@ -110,4 +110,3 @@ def load_event(self, event_params):
             db_session.add(Event(**event_params))
     except sqlalchemy.exc.IntegrityError:
         pass
-
