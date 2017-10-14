@@ -6,9 +6,6 @@ class new_db:
     after a function call (presumably a test).
     """
 
-    def __init__(self):
-        pass
-
     def clear_tables(self):
         meta = Base.metadata
         with session_scope() as session:
