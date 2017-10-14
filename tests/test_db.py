@@ -2,8 +2,10 @@ import datetime as dt
 
 from beluga.models import Event
 from beluga import db_session
+from tests.utils import new_db
 
 
+@new_db()
 def test_write_event():
     event = Event(
         title='So much good stuff',
