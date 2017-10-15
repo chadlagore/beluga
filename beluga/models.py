@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
-from geoalchemy2 import Geography
 
 
 # Base for all table.
@@ -79,7 +78,7 @@ class Event(Base):
 
     start_time = sa.Column(sa.types.DateTime())
     end_time = sa.Column(sa.types.DateTime())
-    location = Geography('POINT')
+    location = sa.Column(sa.types.JSON)
     title = sa.Column(sa.String(200))
     attendees = sa.Column(sa.types.JSON)
 
