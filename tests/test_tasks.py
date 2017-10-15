@@ -3,8 +3,7 @@ import json
 import os
 from unittest.mock import patch
 
-from beluga import session_scope
-from beluga.models import Event
+from beluga.models import Event, session_scope
 from worker import fetch_events, load_event
 from tests import FIXTURES_DIR
 from tests.utils import new_db

@@ -1,7 +1,6 @@
 import datetime as dt
 
-from beluga.models import Event
-from beluga import session_scope
+from beluga.models import Event, session_scope
 from tests.utils import new_db
 
 
