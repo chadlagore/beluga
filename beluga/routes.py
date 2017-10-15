@@ -1,14 +1,10 @@
-import datetime as dt
+from asyncio import AbstractEventLoop
 
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
-import sqlalchemy as sa
-from sqlalchemy.sql.expression import type_coerce
-from geoalchemy2 import func, WKTElement
 
 from beluga.auth import authorized
-from beluga.models import Event, session_scope
 
 
 api = Blueprint('api')
@@ -48,16 +44,15 @@ async def event_handler(request):
     @apiGroup Events
 
     @apiDescription By default, this endpoint returns events ordered
-                    by distance from centroid of search area, with
-                    events in the past omitted. Events may be
-                    filtered by search area, temporal
+                    by start time, with events in the past omitted.
+                    Events may be filtered by search area, temporal
                     range, or both. Note that if a search area or temporal
                     range parameter is specified, all other parameters of
                     the corresponding class must be provided (i.e. a search
                     area or temporal range must be fully specified).
 
     @apiParam {Number} lat Latitude component of the coordinates of
-        the center of the search area.
+        the center of the search area..
     @apiParam {Number} lon Longitude component of the coordinates of
         the center of the search area.
     @apiParam {Number} radius The radius of the search area in
@@ -71,51 +66,7 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
-    # TODO: Error handling.
-    lat = request.args.get('lat')
-    lon = request.args.get('lon')
-    radius = request.args.get('radius')
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
-
-    lat = 49.241
-    lon = -123.1073
-    rad = 10000
-    start_time = dt.datetime(2017, 1, 1, 0, 0)
-    start_time = dt.datetime(2017, 12, 12, 0, 0)
-
-    # Centroid of the request.
-    centroid = WKTElement('POINT({} {})'.format(lat, lon), srid=4326)
-
-    # Distance to the centroid.
-    distance = Event.location.ST_Distance(centroid).label('distance')
-    
-    # Cols to query for.
-    query_cols = [Event.title, Event.location, distance]
-
-    # Filter for radius.
-    within_radius = func.ST_DWithin(Event.location, centroid, radius)
-
-    # TODO: Abstract this out into an EventQuery.
-    with session_scope() as db_session:
-        query = (
-            db_session.query(**query_cols)
-                      .filter(within_radius)
-                      .filter(Event.start_time >= start_time)
-                      .filter(Event.start_time <= end_time)
-                      .sort_by(distance)
-        )
-
-        results = query.all()
-
-        # TODO: Paginate results
-        return json(
-            {
-                "results": results,
-                "next": "",
-                "prev": ""
-            }
-        )
+    raise abort(501, 'not implemented')
 
 
 @authorized()
