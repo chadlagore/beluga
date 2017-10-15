@@ -1,9 +1,9 @@
 import datetime as dt
-import json
 import logging
 
 from celery import Celery
 from eventbrite import Eventbrite
+from geoalchemy2 import WKTElement
 import sqlalchemy
 
 from beluga.models import Event, session_scope
@@ -84,12 +84,9 @@ def fetch_events(self, lat, lon, rad, **params):
             title=event['name']['text'],
             start_time=start,
             end_time=end,
-            location=json.dumps({
-                "lat": lat,
-                "lon": lon,
-                "venue_id": event['venue_id']
-            })
-        )
+            lat=lat,
+            lon=lon
+            )
 
         load_event.delay(new_event)
 
@@ -106,6 +103,11 @@ def load_event(self, event_params):
     """
     try:
         with session_scope() as db_session:
+            event_params['location'] = WKTElement(
+                'POINT({} {})'.format(
+                    event_params.pop('lat'),
+                    event_params.pop('lon'))
+            )
             db_session.add(Event(**event_params))
     except sqlalchemy.exc.IntegrityError:
         pass

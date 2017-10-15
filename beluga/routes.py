@@ -4,6 +4,7 @@ from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
 import sqlalchemy as sa
+from sqlalchemy.types import Float
 
 from beluga.auth import authorized
 from beluga.models import Event, session_scope
@@ -69,18 +70,17 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
-
     # TODO: Error handling.
     lat = request.args.get('lat')
-    lat = request.args.get('lon')
+    lon = request.args.get('lon')
     radius = request.args.get('radius')
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
 
     event_distance = (
         sa.func.sqrt(
-            (Event.lat - lat) * (Event.lat - lat) +
-            (Event.lon - lon) * (Event.lon - lon)
+            (Event.latitude - lat) * (Event.latitude - lat) +
+            (Event.longitude - lon) * (Event.longitude - lon)
         )
     ).label('event_distance')
 
@@ -88,9 +88,8 @@ async def event_handler(request):
     with session_scope() as db_session:
         query = (
             db_session.query(
-                Event.lat,
-                Event.lon,
-                Event.location,
+                Event.latitude,
+                Event.longitude,
                 Event.title,
                 event_distance)
             .filter(event_distance <= radius)
