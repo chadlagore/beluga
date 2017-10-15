@@ -8,7 +8,9 @@ VANCOUVER_RAD = "10km"
 # Celery eats this stuff automagically.
 timezone = 'America/Vancouver'
 result_backend = os.environ['CELERY_RESULT_BACKEND']
-CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
+celery_broker_url = os.environ['CELERY_BROKER_URL']
+broker_pool_limit = 0
+redis_max_connections = 20  # heroku
 
 # Eventbrite things.
 EVENTBRITE_APP_KEY = os.environ['EVENTBRITE_APP_KEY']
