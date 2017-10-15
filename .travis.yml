@@ -4,4 +4,9 @@ services:
   - docker
 
 script:
-  - docker-compose run webdev pytest -vvv
+  - docker-compose run test pytest -vvv
+
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    ./bin/deploy.sh heroku;
+    fi

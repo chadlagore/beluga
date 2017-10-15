@@ -1,12 +1,14 @@
 beluga
 ===================
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/94890da29c40447bb95c93a5bb680e56)](https://www.codacy.com/app/chad.d.lagore/beluga?utm_source=github.com&utm_medium=referral&utm_content=chadlagore/beluga&utm_campaign=badger)
+
 Event tracking, rating and prioritizing for your event going pleasure.
 
 
 ## :running: Getting Started
 
-You will need Docker Compose(`pip install docker-compose`).
+You will need Docker Compose (`pip install docker-compose`).
 
 ```bash
 docker-compose up  # Or docker-compose start for background.
@@ -36,6 +38,12 @@ Head to the `docs` folder.
 
 ## Testing
 
+We use a separate image to run our tests (see 
+`tests/Dockerfile`). It still uses the `docker-compose` pattern,
+because we would like for it to access postgres and redis etc.
+
 ```bash
-docker-compose run webdev pytest -vvv
+docker-compose run test pytest -vvv
 ```
+
+It will not run during a call to `docker-compose up`.
