@@ -23,6 +23,7 @@ if [ "$TARGET" = "heroku" ]; then
 
 elif [ "$TARGET" = "gcp" ]; then
     echo "GCP deployment not implemented"
+    exit 1
 else
     echo "Usage: ./deploy.sh [target]"
 fi;
