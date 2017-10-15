@@ -6,8 +6,7 @@ from celery import Celery
 from eventbrite import Eventbrite
 import sqlalchemy
 
-from beluga import session_scope
-from beluga.models import Event
+from beluga.models import Event, session_scope
 from worker import config
 
 

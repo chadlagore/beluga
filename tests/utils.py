@@ -1,4 +1,4 @@
-from beluga import session_scope, Base
+from beluga.models import Base, session_scope
 
 
 class new_db:

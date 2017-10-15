@@ -3,8 +3,10 @@ from asyncio import AbstractEventLoop
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
+import sqlalchemy as sa
 
 from beluga.auth import authorized
+from beluga.models import Event, session_scope
 
 
 api = Blueprint('api')
@@ -44,15 +46,16 @@ async def event_handler(request):
     @apiGroup Events
 
     @apiDescription By default, this endpoint returns events ordered
-                    by start time, with events in the past omitted.
-                    Events may be filtered by search area, temporal
+                    by distance from centroid of search area, with
+                    events in the past omitted. Events may be
+                    filtered by search area, temporal
                     range, or both. Note that if a search area or temporal
                     range parameter is specified, all other parameters of
                     the corresponding class must be provided (i.e. a search
                     area or temporal range must be fully specified).
 
     @apiParam {Number} lat Latitude component of the coordinates of
-        the center of the search area..
+        the center of the search area.
     @apiParam {Number} lon Longitude component of the coordinates of
         the center of the search area.
     @apiParam {Number} radius The radius of the search area in
@@ -66,7 +69,46 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
-    raise abort(501, 'not implemented')
+
+    # TODO: Error handling.
+    lat = request.args.get('lat')
+    lat = request.args.get('lon')
+    radius = request.args.get('radius')
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+
+    event_distance = (
+        sa.func.sqrt(
+            (Event.lat - lat) * (Event.lat - lat) +
+            (Event.lon - lon) * (Event.lon - lon)
+        )
+    ).label('event_distance')
+
+    # TODO: Abstract this out into an EventQuery.
+    with session_scope() as db_session:
+        query = (
+            db_session.query(
+                Event.lat,
+                Event.lon,
+                Event.location,
+                Event.title,
+                event_distance)
+            .filter(event_distance <= radius)
+            .filter(Event.start_time >= start_time)
+            .filter(Event.start_time <= end_time)
+            .sort_by(event_distance)
+        )
+
+        results = query.all()
+
+        # TODO: Paginate results
+        return json(
+            {
+                "results": results,
+                "next": "",
+                "prev": ""
+            }
+        )
 
 
 @authorized()
