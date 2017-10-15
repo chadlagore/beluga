@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import logging
 
 from sanic import Sanic
@@ -16,24 +17,37 @@ app.config.from_object(config)
 logging.basicConfig(level=logging.INFO)
 app.logger = logging.getLogger(__name__)
 
+# Global database engine.
+db_engine = create_engine(
+    app.config.DATABASE_URL,
+    convert_unicode=True)
 
-def get_db_session():
-    engine = create_engine(
-            app.config.DATABASE_URL,
-            convert_unicode=True)
-    return engine, scoped_session(
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = scoped_session(
         sessionmaker(
             autocommit=False,
             autoflush=False,
-            bind=engine
+            bind=db_engine
         )
     )
 
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
 
 # Database tables.
-_, db_session = get_db_session()
-Base = declarative_base()
-Base.query = db_session.query_property()
+with session_scope() as db_session:
+    Base = declarative_base()
+    Base.query = db_session.query_property()
 
 
 @app.middleware("request")
@@ -45,9 +59,8 @@ async def log_uri(request):
 @app.listener('before_server_start')
 async def before_server_start(app, loop):
     app.logger.info("Standing tables")
-    engine, _ = get_db_session()
     import beluga.models  # noqa
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=db_engine)
 
 
 app.blueprint(api)

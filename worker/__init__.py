@@ -4,8 +4,9 @@ import logging
 
 from celery import Celery
 from eventbrite import Eventbrite
+import sqlalchemy
 
-from beluga import get_db_session
+from beluga import session_scope
 from beluga.models import Event
 from worker import config
 
@@ -80,6 +81,7 @@ def fetch_events(self, lat, lon, rad, **params):
             config.EVENTBRITE_DATE_FMT)
 
         new_event = dict(
+            id=event['id'],
             title=event['name']['text'],
             start_time=start,
             end_time=end,
@@ -98,10 +100,13 @@ def fetch_events(self, lat, lon, rad, **params):
 @celery.task(bind=True)
 def load_event(self, event_params):
     """Loads an event into the Events table.
+    Will not clobber existing events.
 
     Args:
         event (Event): An event.
     """
-    _, db_session = get_db_session()
-    db_session.add(Event(**event_params))
-    db_session.flush()
+    try:
+        with session_scope() as db_session:
+            db_session.add(Event(**event_params))
+    except sqlalchemy.exc.IntegrityError:
+        pass
