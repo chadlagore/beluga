@@ -1,10 +1,11 @@
-from asyncio import AbstractEventLoop
+import datetime as dt
 
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
 import sqlalchemy as sa
-from sqlalchemy.types import Float
+from sqlalchemy.sql.expression import type_coerce
+from geoalchemy2 import func, WKTElement
 
 from beluga.auth import authorized
 from beluga.models import Event, session_scope
@@ -77,25 +78,32 @@ async def event_handler(request):
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
 
-    event_distance = (
-        sa.func.sqrt(
-            (Event.latitude - lat) * (Event.latitude - lat) +
-            (Event.longitude - lon) * (Event.longitude - lon)
-        )
-    ).label('event_distance')
+    lat = 49.241
+    lon = -123.1073
+    rad = 10000
+    start_time = dt.datetime(2017, 1, 1, 0, 0)
+    start_time = dt.datetime(2017, 12, 12, 0, 0)
+
+    # Centroid of the request.
+    centroid = WKTElement('POINT({} {})'.format(lat, lon), srid=4326)
+
+    # Distance to the centroid.
+    distance = Event.location.ST_Distance(centroid).label('distance')
+    
+    # Cols to query for.
+    query_cols = [Event.title, Event.location, distance]
+
+    # Filter for radius.
+    within_radius = func.ST_DWithin(Event.location, centroid, radius)
 
     # TODO: Abstract this out into an EventQuery.
     with session_scope() as db_session:
         query = (
-            db_session.query(
-                Event.latitude,
-                Event.longitude,
-                Event.title,
-                event_distance)
-            .filter(event_distance <= radius)
-            .filter(Event.start_time >= start_time)
-            .filter(Event.start_time <= end_time)
-            .sort_by(event_distance)
+            db_session.query(**query_cols)
+                      .filter(within_radius)
+                      .filter(Event.start_time >= start_time)
+                      .filter(Event.start_time <= end_time)
+                      .sort_by(distance)
         )
 
         results = query.all()

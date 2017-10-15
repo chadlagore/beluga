@@ -86,7 +86,7 @@ def fetch_events(self, lat, lon, rad, **params):
             end_time=end,
             lat=lat,
             lon=lon
-            )
+        )
 
         load_event.delay(new_event)
 
@@ -106,7 +106,8 @@ def load_event(self, event_params):
             event_params['location'] = WKTElement(
                 'POINT({} {})'.format(
                     event_params.pop('lat'),
-                    event_params.pop('lon'))
+                    event_params.pop('lon')),
+                srid=4326
             )
             db_session.add(Event(**event_params))
     except sqlalchemy.exc.IntegrityError:
