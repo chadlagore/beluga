@@ -17,6 +17,10 @@ app.config.from_object(config)
 logging.basicConfig(level=logging.INFO)
 app.logger = logging.getLogger(__name__)
 
+# Global database engine.
+db_engine = create_engine(
+    app.config.DATABASE_URL,
+    convert_unicode=True)
 
 @app.middleware("request")
 async def log_uri(request):
