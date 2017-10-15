@@ -6,7 +6,6 @@ from sanic.response import json
 
 from beluga.auth import authorized
 
-
 api = Blueprint('api')
 
 
@@ -66,7 +65,37 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
-    raise abort(501, 'not implemented')
+
+    from beluga import db_session
+    from beluga.models import Event
+    
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    radius = request.args.get('radius')
+
+    # Acquire the events the user requested
+    if start_time or end_time:
+        # Temporal range must be fully specified!
+        if not start_time or not end_time:
+            raise abort(400, "temporal range must be fully specified")
+        
+    elif lat or lon or radius:
+        if not lat or not lon or not radius:
+            raise abort(400, "search area must be fully specified")
+    else:
+        events = db_session.query(Event).order_by(Event.start_time.desc())
+
+    results = map(lambda event: {
+        'title': event.title,
+        'location': event.location, # not validating outgoing schema here
+        'start_time': event.start_time,
+        'end_time': event.end_time
+        # No next/previous pages on this one because we're returning everything
+    }, events)
+
+    return json({'results': results})
 
 
 @authorized()
