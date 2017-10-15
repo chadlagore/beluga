@@ -1,3 +1,7 @@
+from datetime import timezone as tz
+import json as pyjson
+import math
+
 from asyncio import AbstractEventLoop
 
 from sanic import Blueprint
@@ -7,12 +11,9 @@ from sanic.response import json
 from beluga.models import session_scope, Event
 from beluga.auth import authorized
 
-import json as pyjson
-from datetime import timezone as tz
-import math
-
 api = Blueprint('api')
 
+RADIUS_OF_EARTH = 6371.0 # in kilometres
 
 # Basic routes.
 @api.route('/', ['GET'])
@@ -100,7 +101,7 @@ async def event_handler(request):
             # of the latitude we are given and multiply that by the length
             # of one degree longitude at the equator.
             lat_rads = (math.pi * float(lat)) / 180.0 # given lat in radians
-            lon_factor = 1.0 / ((math.pi / 180.0) * 6371.0 * math.cos(lat_rads))
+            lon_factor = 1.0 / ((math.pi / 180.0) * RADIUS_OF_EARTH * math.cos(lat_rads))
 
             # Using an approximation here for simplicity.
             # The distance of a single degree of latitude varies around
@@ -137,8 +138,12 @@ async def event_handler(request):
     # lat/lon in the database because of how location is currently
     # stored. This will change in the future.
     if lat:
-        events = filter(lambda event: event['location']['lat'] > min_lat and event['location']['lat'] < max_lat and
-                            event['location']['lon'] > min_lon and event['location']['lon'] < max_lon, events)
+        events = filter(
+                    lambda event: event['location']['lat'] > min_lat and
+                                    event['location']['lat'] < max_lat and
+                                    event['location']['lon'] > min_lon and
+                                    event['location']['lon'] < max_lon,
+                    events)
 
     # No next/previous pages on this one because we're returning everything
     return json({'results': events})
