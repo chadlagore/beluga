@@ -10,7 +10,7 @@ timezone = 'America/Vancouver'
 result_backend = os.environ['CELERY_RESULT_BACKEND']
 celery_broker_url = os.environ['CELERY_BROKER_URL']
 broker_pool_limit = 0
-redis_max_connections = 10  # heroku
+redis_max_connections = 20  # heroku
 
 # Eventbrite things.
 EVENTBRITE_APP_KEY = os.environ['EVENTBRITE_APP_KEY']
