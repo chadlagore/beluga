@@ -8,7 +8,7 @@ from beluga.models import session_scope, Event
 from beluga.auth import authorized
 
 import json as pyjson
-from datetime import datetime as dt, timezone as tz
+from datetime import timezone as tz
 import math
 
 api = Blueprint('api')
@@ -81,7 +81,7 @@ async def event_handler(request):
     if start_time or end_time:
         if not start_time or not end_time:
             raise abort(400, "temporal range must be fully specified")
-        
+
     if lat or lon or radius:
         if not lat or not lon or not radius:
             raise abort(400, "search area must be fully specified")
@@ -125,7 +125,7 @@ async def event_handler(request):
     # (read: deal with the JSON string in location)
     events = map(lambda event: {
         'title': event.title,
-        'location': {k:v for (k,v) in 
+        'location': {k:v for (k,v) in
                 pyjson.loads(event.location).items()
                 if k in ['lat', 'lon', 'title']},
         'start_time': event.start_time.astimezone(tz.utc).isoformat(),
@@ -139,12 +139,6 @@ async def event_handler(request):
     if lat:
         events = filter(lambda event: event['location']['lat'] > min_lat and event['location']['lat'] < max_lat and
                             event['location']['lon'] > min_lon and event['location']['lon'] < max_lon, events)
-
-    # We are parsing JSON here because we get the location from
-    # the database as a JSON string. All we're doing is parsing
-    # the string so we can return valid JSON, and filtering any
-    # keys that aren't in {lat, lon, title}.
-    results = events
 
     # No next/previous pages on this one because we're returning everything
     return json({'results': events})
