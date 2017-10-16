@@ -91,13 +91,12 @@ def fetch_events(self, lat, lon, rad, **params):
             })
         )
 
-        load_event.delay(new_event)
+        load_event(new_event)
 
     return result
 
 
-@celery.task(bind=True)
-def load_event(self, event_params):
+def load_event(event_params):
     """Loads an event into the Events table.
     Will not clobber existing events.
 
