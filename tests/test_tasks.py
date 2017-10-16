@@ -38,10 +38,10 @@ def new_event_dict():
 
 
 @patch('worker.Eventbrite', new=MockEventbrite)
-@patch('worker.load_event.delay')
-def test_fetch_events(mock_load_event_delay):
+@patch('worker.load_event')
+def test_fetch_events(mock_load_event):
     fetch_events(lat=1, lon=2, rad=3)
-    assert mock_load_event_delay.call_count == 5
+    assert mock_load_event.call_count == 5
 
 
 @new_db()
