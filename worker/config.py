@@ -15,3 +15,4 @@ redis_max_connections = 20  # heroku
 # Eventbrite things.
 EVENTBRITE_APP_KEY = os.environ['EVENTBRITE_APP_KEY']
 EVENTBRITE_DATE_FMT = '%Y-%m-%dT%H:%M:%SZ'  # utc format only.
+COLLECTION_INTERVAL = int(os.environ.get('COLLECTION_INTERVAL', 20))
