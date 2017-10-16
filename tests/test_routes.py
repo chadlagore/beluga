@@ -9,7 +9,7 @@ def test_healthcheck_returns_200():
 def test_event_handler_exists():
     route = '/events'
     request, response = app.test_client.get(route)
-    assert response.status == 501
+    assert response.status == 200
 
 
 def test_rsvp_post_exists():

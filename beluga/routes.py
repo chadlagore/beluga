@@ -1,14 +1,19 @@
+from datetime import timezone as tz
+import json as pyjson
+import math
+
 from asyncio import AbstractEventLoop
 
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
 
+from beluga.models import session_scope, Event
 from beluga.auth import authorized
-
 
 api = Blueprint('api')
 
+RADIUS_OF_EARTH = 6371.0 # in kilometres
 
 # Basic routes.
 @api.route('/', ['GET'])
@@ -66,7 +71,82 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
-    raise abort(501, 'not implemented')
+
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    radius = request.args.get('radius')
+
+    # Validate the parameters we got, if any
+    if start_time or end_time:
+        if not start_time or not end_time:
+            raise abort(400, "temporal range must be fully specified")
+
+    if lat or lon or radius:
+        if not lat or not lon or not radius:
+            raise abort(400, "search area must be fully specified")
+    
+    # Acquire the events the user requested
+    with session_scope() as db_session:
+        events = db_session.query(Event)
+        if start_time:
+            events = events.filter(Event.start_time >= start_time)
+            events = events.filter(Event.end_time <= end_time)
+        if lat:
+            # Convert from lat/lon/radius to upper/lower bounds for lat/lon
+
+            # We need to find the length of one degree longitude at the
+            # center point we were given. To do so, we take the cosine
+            # of the latitude we are given and multiply that by the length
+            # of one degree longitude at the equator.
+            lat_rads = (math.pi * float(lat)) / 180.0 # given lat in radians
+            lon_factor = 1.0 / ((math.pi / 180.0) * RADIUS_OF_EARTH * math.cos(lat_rads))
+
+            # Using an approximation here for simplicity.
+            # The distance of a single degree of latitude varies around
+            # the globe, but does not vary as dramatically as longitude.
+            # We therefore can use an approximation here. More info at
+            # https://en.wikipedia.org/wiki/Latitude#Length_of_a_degree_of_latitude.
+            lat_factor = 1.0 / 111.0 # 1 deg lat ~= 111 km (give or take 1 km)
+
+            min_lon = float(lon) - (float(radius) * lon_factor)
+            max_lon = float(lon) + (float(radius) * lon_factor)
+
+            min_lat = float(lat) - (float(radius) * lat_factor)
+            max_lat = float(lat) + (float(radius) * lat_factor)
+
+            # TODO once we can query by location, the query
+            # should be modified here to reflect the location we 
+            # got from the client.
+            pass
+        events = events.order_by(Event.start_time.asc())
+
+    # Convert from DB tables to dictionaries
+    # (read: deal with the JSON string in location)
+    events = map(lambda event: {
+        'title': event.title,
+        'location': {k:v for (k,v) in
+                pyjson.loads(event.location).items()
+                if k in ['lat', 'lon', 'title']},
+        'start_time': event.start_time.astimezone(tz.utc).isoformat(),
+        'end_time': event.end_time.astimezone(tz.utc).isoformat()
+    }, events)
+
+    # HACKHACK we're filtering events by location ENTIRELY IN-MEMORY
+    # here. This is ugly, but necessary because we can't filter by
+    # lat/lon in the database because of how location is currently
+    # stored. This will change in the future.
+    if lat:
+        events = filter(
+                    lambda event: event['location']['lat'] > min_lat and
+                                    event['location']['lat'] < max_lat and
+                                    event['location']['lon'] > min_lon and
+                                    event['location']['lon'] < max_lon,
+                    events)
+
+    # No next/previous pages on this one because we're returning everything
+    return json({'results': events})
 
 
 @authorized()
