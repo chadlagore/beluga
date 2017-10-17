@@ -98,7 +98,6 @@ def fetch_events(self, lat, lon, rad, **params):
     return result
 
 
-# p str(on_conflict_stmt.compile(dialect=psql.dialect()))
 def load_event(event_params, session):
     """Loads an event into the Events table.
     Will update events on confict.
