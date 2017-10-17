@@ -103,7 +103,8 @@ def load_event(event_params, session):
     Will update events on confict.
 
     Args:
-        event (Event): An event.
+        event_params (dict): A set of event parameters.
+        session (sa.scoped_session): A SQLAlchemy session.
     """
     # Basic insert statement.
     insert_stmt = psql.insert(Event).values(**event_params)
