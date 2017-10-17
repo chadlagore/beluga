@@ -23,7 +23,7 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Setting up periodic tasks...")
 
     # https://www.eventbrite.com/developer/v3/api_overview/rate-limits/
-    # We get 2000 calls per hour - this is doing 180.
+    # We get 2000 calls per hour.
     sender.add_periodic_task(
         config.COLLECTION_INTERVAL,
         fetch_events.s(
