@@ -25,7 +25,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # https://www.eventbrite.com/developer/v3/api_overview/rate-limits/
     # We get 2000 calls per hour - this is doing 180.
     sender.add_periodic_task(
-        20,
+        config.COLLECTION_INTERVAL,
         fetch_events.s(
             lat=config.VANCOUVER_LAT,
             lon=config.VANCOUVER_LON,
@@ -92,6 +92,7 @@ def fetch_events(self, lat, lon, rad, **params):
                 })
             )
 
+            # Load event into database.
             load_event(new_event, db_session)
 
     return result
