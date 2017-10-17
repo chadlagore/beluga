@@ -4,7 +4,7 @@ import logging
 
 from celery import Celery
 from eventbrite import Eventbrite
-import sqlalchemy
+import sqlalchemy.dialects.postgresql as psql
 
 from beluga.models import Event, session_scope
 from worker import config
@@ -70,41 +70,41 @@ def fetch_events(self, lat, lon, rad, **params):
     result = eb.event_search(**data)
 
     # Produce a new task to load every event.
-    for event in result['events']:
-        start = dt.datetime.strptime(
-            event['start']['utc'],
-            config.EVENTBRITE_DATE_FMT)
+    with session_scope() as db_session:
+        for event in result['events']:
+            start = dt.datetime.strptime(
+                event['start']['utc'],
+                config.EVENTBRITE_DATE_FMT)
 
-        end = dt.datetime.strptime(
-            event['end']['utc'],
-            config.EVENTBRITE_DATE_FMT)
+            end = dt.datetime.strptime(
+                event['end']['utc'],
+                config.EVENTBRITE_DATE_FMT)
 
-        new_event = dict(
-            id=event['id'],
-            title=event['name']['text'],
-            start_time=start,
-            end_time=end,
-            location=json.dumps({
-                "lat": lat,
-                "lon": lon,
-                "venue_id": event['venue_id']
-            })
-        )
+            new_event = dict(
+                id=event['id'],
+                title=event['name']['text'],
+                start_time=start,
+                end_time=end,
+                location=json.dumps({
+                    "lat": lat,
+                    "lon": lon,
+                    "venue_id": event['venue_id']
+                })
+            )
 
-        load_event(new_event)
+            load_event(new_event, db_session)
 
     return result
 
 
-def load_event(event_params):
+def load_event(event_params, session):
     """Loads an event into the Events table.
     Will not clobber existing events.
 
     Args:
         event (Event): An event.
     """
-    try:
-        with session_scope() as db_session:
-            db_session.add(Event(**event_params))
-    except sqlalchemy.exc.IntegrityError:
-        pass
+    # Basically an ON CONFLICT DO NOTHING statement.
+    insert_stmt = psql.insert(Event).values(**event_params)
+    on_conflict_stmt = insert_stmt.on_conflict_do_nothing()
+    session.execute(on_conflict_stmt)

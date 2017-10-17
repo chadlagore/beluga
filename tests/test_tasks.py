@@ -50,9 +50,9 @@ def test_load_event():
     database.
     """
     event = new_event_dict()
-    load_event(event)
 
     with session_scope() as db_session:
+        load_event(event, db_session)
         result = db_session.query(Event).one()
         assert result.title == event['title']
         assert result.start_time == event['start_time']
@@ -72,12 +72,11 @@ def test_events_dont_get_clobbered():
         db_session.add(Event(**event_with_attendees))
         db_session.commit()
 
-    # Try to inject a vanilla event without attendees.
-    the_same_event = new_event_dict()
-    load_event(the_same_event)
-    
-    # Now check whats in the db.
-    with session_scope() as db_session:
+        # Try to inject a vanilla event without attendees.
+        the_same_event = new_event_dict()
+        load_event(the_same_event, db_session)
+
+        # Now check whats in the db.
         this_id = the_same_event['id']
         result = db_session.query(Event).filter(Event.id == this_id).all()
         assert len(result) == 1
