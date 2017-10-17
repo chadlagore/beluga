@@ -98,14 +98,21 @@ def fetch_events(self, lat, lon, rad, **params):
     return result
 
 
+# p str(on_conflict_stmt.compile(dialect=psql.dialect()))
 def load_event(event_params, session):
     """Loads an event into the Events table.
-    Will not clobber existing events.
+    Will update events on confict.
 
     Args:
         event (Event): An event.
     """
-    # Basically an ON CONFLICT DO NOTHING statement.
+    # Basic insert statement.
     insert_stmt = psql.insert(Event).values(**event_params)
-    on_conflict_stmt = insert_stmt.on_conflict_do_nothing()
+
+    # Our ON CONFLICT DO UPDATE clause.
+    on_conflict_stmt = insert_stmt.on_conflict_do_update(
+        index_elements=[Event.id],
+        set_=event_params)
+
+    # Add to database.
     session.execute(on_conflict_stmt)

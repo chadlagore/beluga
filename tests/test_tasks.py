@@ -68,16 +68,28 @@ def test_events_dont_get_clobbered():
     # Mock up event with attendees, insert to db.
     event_with_attendees = new_event_dict()
     event_with_attendees['attendees'] = ['alice', 'bob']
+
     with session_scope() as db_session:
         db_session.add(Event(**event_with_attendees))
         db_session.commit()
 
-        # Try to inject a vanilla event without attendees.
+        # # Try to inject a vanilla event without attendees.
         the_same_event = new_event_dict()
         load_event(the_same_event, db_session)
 
-        # Now check whats in the db.
+        # # Now check whats in the db.
         this_id = the_same_event['id']
         result = db_session.query(Event).filter(Event.id == this_id).all()
         assert len(result) == 1
         assert result[0].attendees == event_with_attendees['attendees']
+        assert result[0].title == event_with_attendees['title']
+
+    # Change the event title, reload db, test the upsert took place.
+    with session_scope() as db_session:
+        new_title = 'So much MORE good stuff!'
+        the_same_event['title'] = new_title
+        load_event(the_same_event, db_session)
+        result = db_session.query(Event).filter(Event.id == this_id).all()
+        assert len(result) == 1
+        assert result[0].attendees == event_with_attendees['attendees']
+        assert result[0].title == new_title
