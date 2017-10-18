@@ -122,7 +122,6 @@ def load_event(event_params, session):
 def clear_old_events():
     """Clear events whose end_time has passed."""
     with session_scope() as db_session:
-        import pdb; pdb.set_trace()
         stmt = (Event.__table__
                      .delete()
                      .where(Event.end_time < dt.date.today()))
