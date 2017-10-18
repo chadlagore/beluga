@@ -3,6 +3,7 @@ import json
 import logging
 
 from celery import Celery
+from celery.schedules import crontab
 from eventbrite import Eventbrite
 import sqlalchemy.dialects.postgresql as psql
 
@@ -32,6 +33,12 @@ def setup_periodic_tasks(sender, **kwargs):
             rad=config.VANCOUVER_RAD
         ),
         expires=60
+    )
+
+    # Schedule cleanup  at the beginning of each day.
+    sender.add_periodic_task(
+        crontab(hour=0, minute=5),
+        clear_old_events.s()
     )
 
 
