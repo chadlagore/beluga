@@ -1,10 +1,11 @@
 import datetime as dt
+from freezegun import freeze_time
 import json
 import os
 from unittest.mock import patch
 
 from beluga.models import Event, session_scope
-from worker import fetch_events, load_event
+import worker as tasks
 from tests import FIXTURES_DIR
 from tests.utils import new_db
 
@@ -40,7 +41,7 @@ def new_event_dict():
 @patch('worker.Eventbrite', new=MockEventbrite)
 @patch('worker.load_event')
 def test_fetch_events(mock_load_event):
-    fetch_events(lat=1, lon=2, rad=3)
+    tasks.fetch_events(lat=1, lon=2, rad=3)
     assert mock_load_event.call_count == 5
 
 
@@ -52,7 +53,7 @@ def test_load_event():
     event = new_event_dict()
 
     with session_scope() as db_session:
-        load_event(event, db_session)
+        tasks.load_event(event, db_session)
         result = db_session.query(Event).one()
         assert result.title == event['title']
         assert result.start_time == event['start_time']
@@ -73,9 +74,9 @@ def test_events_dont_get_clobbered():
         db_session.add(Event(**event_with_attendees))
         db_session.commit()
 
-        # # Try to inject a vanilla event without attendees.
+        # Try to inject a vanilla event without attendees.
         the_same_event = new_event_dict()
-        load_event(the_same_event, db_session)
+        tasks.load_event(the_same_event, db_session)
 
         # # Now check whats in the db.
         this_id = the_same_event['id']
@@ -88,8 +89,24 @@ def test_events_dont_get_clobbered():
     with session_scope() as db_session:
         new_title = 'So much MORE good stuff!'
         the_same_event['title'] = new_title
-        load_event(the_same_event, db_session)
+        tasks.load_event(the_same_event, db_session)
         result = db_session.query(Event).filter(Event.id == this_id).all()
         assert len(result) == 1
         assert result[0].attendees == event_with_attendees['attendees']
         assert result[0].title == new_title
+
+
+@new_db()
+def test_events_cleanup_daily():
+    """Enforce that events get cleaned up daily."""
+    yesterday_event = new_event_dict()
+    with session_scope() as db_session:
+        tasks.load_event(yesterday_event, db_session)
+        assert db_session.query(Event).count() == 1
+
+    # Freeze time somewhere around tomorrow morning.
+    with freeze_time("2016-05-06 01:21:34"):
+        tasks.clear_old_events()
+
+    with session_scope() as db_session:
+        assert db_session.query(Event).count() == 0
