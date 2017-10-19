@@ -89,7 +89,7 @@ def fetch_events(self, lat, lon, rad, **params):
                 timezone=event['start']['timezone'],
                 capacity=event['capacity'],
                 location={
-                    "lat": lat,
+                    "lat": lat,  # TODO: This is very broken.
                     "lon": lon,
                     "venue_id": event['venue_id']
                 },
