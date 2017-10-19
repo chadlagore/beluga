@@ -128,8 +128,9 @@ def load_event(event_params, session):
 @celery.task()
 def clear_old_events():
     """Clear events whose end_time has passed."""
+    cutoff = dt.date.today() - dt.timedelta(days=config.STALE_EVENT_DAYS)
     with session_scope() as db_session:
         stmt = (Event.__table__
                      .delete()
-                     .where(Event.end_time < dt.date.today()))
+                     .where(Event.end_time < cutoff))
         db_session.execute(stmt)

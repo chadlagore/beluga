@@ -97,6 +97,7 @@ def test_events_dont_get_clobbered():
 
 
 @new_db()
+@patch('worker.config.STALE_EVENT_DAYS', new=0)
 def test_events_cleanup_daily():
     """Enforce that events get cleaned up daily."""
     yesterday_event = new_event_dict()
