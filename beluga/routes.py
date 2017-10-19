@@ -1,5 +1,4 @@
 from datetime import timezone as tz
-import json as pyjson
 import math
 
 from asyncio import AbstractEventLoop
@@ -120,33 +119,12 @@ async def event_handler(request):
             # should be modified here to reflect the location we 
             # got from the client.
             pass
-        events = events.order_by(Event.start_time.asc())
 
-    # Convert from DB tables to dictionaries
-    # (read: deal with the JSON string in location)
-    events = map(lambda event: {
-        'title': event.title,
-        'location': {k:v for (k,v) in
-                pyjson.loads(event.location).items()
-                if k in ['lat', 'lon', 'title']},
-        'start_time': event.start_time.astimezone(tz.utc).isoformat(),
-        'end_time': event.end_time.astimezone(tz.utc).isoformat()
-    }, events)
-
-    # HACKHACK we're filtering events by location ENTIRELY IN-MEMORY
-    # here. This is ugly, but necessary because we can't filter by
-    # lat/lon in the database because of how location is currently
-    # stored. This will change in the future.
-    if lat:
-        events = filter(
-                    lambda event: event['location']['lat'] > min_lat and
-                                    event['location']['lat'] < max_lat and
-                                    event['location']['lon'] > min_lon and
-                                    event['location']['lon'] < max_lon,
-                    events)
+    # Sort by start_time for now.
+    events = events.order_by(Event.start_time.asc())
 
     # No next/previous pages on this one because we're returning everything
-    return json({'results': events})
+    return json({'results': [i.as_dict() for i in events.all()]})
 
 
 @authorized()
