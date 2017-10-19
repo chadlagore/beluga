@@ -3,6 +3,7 @@ import json
 import logging
 
 from celery import Celery
+from celery.schedules import crontab
 from eventbrite import Eventbrite
 import sqlalchemy.dialects.postgresql as psql
 
@@ -32,6 +33,12 @@ def setup_periodic_tasks(sender, **kwargs):
             rad=config.VANCOUVER_RAD
         ),
         expires=60
+    )
+
+    # Schedule cleanup  at the beginning of each day.
+    sender.add_periodic_task(
+        crontab(hour=0, minute=5),
+        clear_old_events.s()
     )
 
 
@@ -116,3 +123,14 @@ def load_event(event_params, session):
 
     # Add to database.
     session.execute(on_conflict_stmt)
+
+
+@celery.task()
+def clear_old_events():
+    """Clear events whose end_time has passed."""
+    cutoff = dt.date.today() - dt.timedelta(days=config.STALE_EVENT_DAYS)
+    with session_scope() as db_session:
+        stmt = (Event.__table__
+                     .delete()
+                     .where(Event.end_time < cutoff))
+        db_session.execute(stmt)
