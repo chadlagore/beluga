@@ -1,5 +1,4 @@
 from datetime import timezone as tz
-import json as pyjson
 import math
 
 from asyncio import AbstractEventLoop
@@ -127,7 +126,7 @@ async def event_handler(request):
     events = map(lambda event: {
         'title': event.title,
         'location': {k:v for (k,v) in
-                pyjson.loads(event.location).items()
+                event.location.items()
                 if k in ['lat', 'lon', 'title']},
         'start_time': event.start_time.astimezone(tz.utc).isoformat(),
         'end_time': event.end_time.astimezone(tz.utc).isoformat()
