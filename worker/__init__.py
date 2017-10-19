@@ -79,24 +79,25 @@ def fetch_events(self, lat, lon, rad, **params):
     # Produce a new task to load every event.
     with session_scope() as db_session:
         for event in result['events']:
-            start = dt.datetime.strptime(
-                event['start']['utc'],
-                config.EVENTBRITE_DATE_FMT)
-
-            end = dt.datetime.strptime(
-                event['end']['utc'],
-                config.EVENTBRITE_DATE_FMT)
-
             new_event = dict(
                 id=event['id'],
                 title=event['name']['text'],
-                start_time=start,
-                end_time=end,
-                location=json.dumps({
+                start_time=event['start']['utc'],
+                end_time=event['end']['utc'],
+                start_time_local=event['start']['local'],
+                end_time_local=event['end']['local'],
+                timezone=event['start']['timezone'],
+                capacity=event['capacity'],
+                location={
                     "lat": lat,
                     "lon": lon,
                     "venue_id": event['venue_id']
-                })
+                },
+                logo=event['logo'],
+                url=event['url'],
+                description_text=event['description']['text'],
+                description_html=event['description']['html'],
+                is_free=event['is_free']
             )
 
             # Load event into database.
