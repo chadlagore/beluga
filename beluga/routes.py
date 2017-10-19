@@ -115,16 +115,13 @@ async def event_handler(request):
             min_lat = float(lat) - (float(radius) * lat_factor)
             max_lat = float(lat) + (float(radius) * lat_factor)
 
-            # Filter based on box.
-            events = (
-                events.filter(min_lat <= Event.location['lat'] <= max_lat)
-                      .filter(min_lon <= Event.location['lon'] <= max_lon)
-            )
+            # TODO once we can query by location, the query
+            # should be modified here to reflect the location we 
+            # got from the client.
+            pass
 
-            # TODO: order by distance from lat / lon.
-
-        # Sort by start time for now.
-        events = events.order_by(Event.start_time.asc())
+    # Sort by start_time for now.
+    events = events.order_by(Event.start_time.asc())
 
     # No next/previous pages on this one because we're returning everything
     return json({'results': [i.as_dict() for i in events.all()]})
