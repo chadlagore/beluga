@@ -79,7 +79,7 @@ class Event(Base):
     start_time = sa.Column(sa.types.DateTime())
     end_time = sa.Column(sa.types.DateTime())
     start_time_local = sa.Column(sa.types.DateTime())
-    end_time_loal = sa.Column(sa.types.DateTime())
+    end_time_local = sa.Column(sa.types.DateTime())
     timezone = sa.Column(sa.String(50))
     location = sa.Column(sa.types.JSON)
     title = sa.Column(sa.String(200))
