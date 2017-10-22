@@ -23,6 +23,12 @@ class MockEventbrite:
                 "events": json.load(infile)
             }
 
+    def get(self, *args):
+        return {
+            'latitude': "49.333",
+            'longitude': "-123.1512"
+        }
+
 
 def new_event_dict():
     return dict(

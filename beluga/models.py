@@ -90,6 +90,7 @@ class Event(Base):
     description_text = sa.Column(sa.Text())
     description_html = sa.Column(sa.Text())
     is_free = sa.Column(sa.Boolean())
+    online_event = sa.Column(sa.Boolean())
 
     def __str__(self):
         return '<[{}] Event {}>'.format(
