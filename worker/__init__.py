@@ -3,8 +3,9 @@ import json
 import logging
 
 from celery import Celery
+from celery.schedules import crontab
 from eventbrite import Eventbrite
-import sqlalchemy
+import sqlalchemy.dialects.postgresql as psql
 
 from beluga.models import Event, session_scope
 from worker import config
@@ -23,15 +24,21 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Setting up periodic tasks...")
 
     # https://www.eventbrite.com/developer/v3/api_overview/rate-limits/
-    # We get 2000 calls per hour - this is doing 180.
+    # We get 2000 calls per hour.
     sender.add_periodic_task(
-        20,
+        config.COLLECTION_INTERVAL,
         fetch_events.s(
             lat=config.VANCOUVER_LAT,
             lon=config.VANCOUVER_LON,
             rad=config.VANCOUVER_RAD
         ),
         expires=60
+    )
+
+    # Schedule cleanup  at the beginning of each day.
+    sender.add_periodic_task(
+        crontab(hour=0, minute=5),
+        clear_old_events.s()
     )
 
 
@@ -70,42 +77,61 @@ def fetch_events(self, lat, lon, rad, **params):
     result = eb.event_search(**data)
 
     # Produce a new task to load every event.
-    for event in result['events']:
-        start = dt.datetime.strptime(
-            event['start']['utc'],
-            config.EVENTBRITE_DATE_FMT)
+    with session_scope() as db_session:
+        for event in result['events']:
+            new_event = dict(
+                id=event['id'],
+                title=event['name']['text'],
+                start_time=event['start']['utc'],
+                end_time=event['end']['utc'],
+                start_time_local=event['start']['local'],
+                end_time_local=event['end']['local'],
+                timezone=event['start']['timezone'],
+                capacity=event['capacity'],
+                location={
+                    "lat": lat,  # TODO: This is very broken.
+                    "lon": lon,
+                    "venue_id": event['venue_id']
+                },
+                logo=event['logo'],
+                url=event['url'],
+                description_text=event['description']['text'],
+                description_html=event['description']['html'],
+                is_free=event['is_free']
+            )
 
-        end = dt.datetime.strptime(
-            event['end']['utc'],
-            config.EVENTBRITE_DATE_FMT)
-
-        new_event = dict(
-            id=event['id'],
-            title=event['name']['text'],
-            start_time=start,
-            end_time=end,
-            location=json.dumps({
-                "lat": lat,
-                "lon": lon,
-                "venue_id": event['venue_id']
-            })
-        )
-
-        load_event.delay(new_event)
+            # Load event into database.
+            load_event(new_event, db_session)
 
     return result
 
 
-@celery.task(bind=True)
-def load_event(self, event_params):
+def load_event(event_params, session):
     """Loads an event into the Events table.
-    Will not clobber existing events.
+    Will update events on confict.
 
     Args:
-        event (Event): An event.
+        event_params (dict): A set of event parameters.
+        session (sa.scoped_session): A SQLAlchemy session.
     """
-    try:
-        with session_scope() as db_session:
-            db_session.add(Event(**event_params))
-    except sqlalchemy.exc.IntegrityError:
-        pass
+    # Basic insert statement.
+    insert_stmt = psql.insert(Event).values(**event_params)
+
+    # Our ON CONFLICT DO UPDATE clause.
+    on_conflict_stmt = insert_stmt.on_conflict_do_update(
+        index_elements=[Event.id],
+        set_=event_params)
+
+    # Add to database.
+    session.execute(on_conflict_stmt)
+
+
+@celery.task()
+def clear_old_events():
+    """Clear events whose end_time has passed."""
+    cutoff = dt.date.today() - dt.timedelta(days=config.STALE_EVENT_DAYS)
+    with session_scope() as db_session:
+        stmt = (Event.__table__
+                     .delete()
+                     .where(Event.end_time < cutoff))
+        db_session.execute(stmt)

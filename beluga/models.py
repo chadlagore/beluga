@@ -78,11 +78,26 @@ class Event(Base):
 
     start_time = sa.Column(sa.types.DateTime())
     end_time = sa.Column(sa.types.DateTime())
+    start_time_local = sa.Column(sa.types.DateTime())
+    end_time_local = sa.Column(sa.types.DateTime())
+    timezone = sa.Column(sa.String(50))
     location = sa.Column(sa.types.JSON)
     title = sa.Column(sa.String(200))
     attendees = sa.Column(sa.types.JSON)
+    capacity = sa.Column(sa.Integer())
+    logo = sa.Column(sa.types.JSON)
+    url = sa.Column(sa.String(200))
+    description_text = sa.Column(sa.Text())
+    description_html = sa.Column(sa.Text())
+    is_free = sa.Column(sa.Boolean())
 
     def __str__(self):
         return '<[{}] Event {}>'.format(
             self.id, self.title
         )
+
+    def as_dict(self):
+        return {
+            c.name: getattr(self, c.name)
+            for c in self.__table__.columns
+        }
