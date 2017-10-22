@@ -22,7 +22,9 @@ services:
       - worker
 
   postgres:
-    image: postgres
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
     ports:
       - "5432"
     environment:
