@@ -10,9 +10,11 @@ from sanic.response import json
 from beluga.models import session_scope, Event
 from beluga.auth import authorized
 
+from geoalchemy2.functions import ST_DWithin
+
 api = Blueprint('api')
 
-RADIUS_OF_EARTH = 6371.0 # in kilometres
+METERS_PER_KILOMETER = 1000.0
 
 # Basic routes.
 @api.route('/', ['GET'])
@@ -93,34 +95,14 @@ async def event_handler(request):
             events = events.filter(Event.start_time >= start_time)
             events = events.filter(Event.end_time <= end_time)
         if lat:
-            # Convert from lat/lon/radius to upper/lower bounds for lat/lon
+            events = events.filter(
+                Event.location.ST_DWitin(
+                    ("POINT(%s %s)" % lat, lon), # Center point
+                    (radius * METERS_PER_KILOMETER) # Convert from km to m
+                )
+            )
 
-            # We need to find the length of one degree longitude at the
-            # center point we were given. To do so, we take the cosine
-            # of the latitude we are given and multiply that by the length
-            # of one degree longitude at the equator.
-            lat_rads = (math.pi * float(lat)) / 180.0 # given lat in radians
-            lon_factor = 1.0 / ((math.pi / 180.0) * RADIUS_OF_EARTH * math.cos(lat_rads))
-
-            # Using an approximation here for simplicity.
-            # The distance of a single degree of latitude varies around
-            # the globe, but does not vary as dramatically as longitude.
-            # We therefore can use an approximation here. More info at
-            # https://en.wikipedia.org/wiki/Latitude#Length_of_a_degree_of_latitude.
-            lat_factor = 1.0 / 111.0 # 1 deg lat ~= 111 km (give or take 1 km)
-
-            min_lon = float(lon) - (float(radius) * lon_factor)
-            max_lon = float(lon) + (float(radius) * lon_factor)
-
-            min_lat = float(lat) - (float(radius) * lat_factor)
-            max_lat = float(lat) + (float(radius) * lat_factor)
-
-            # TODO once we can query by location, the query
-            # should be modified here to reflect the location we 
-            # got from the client.
-            pass
-
-    # Sort by start_time for now.
+    # Sort by start_time
     events = events.order_by(Event.start_time.asc())
 
     # No next/previous pages on this one because we're returning everything
