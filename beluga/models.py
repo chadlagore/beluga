@@ -3,6 +3,7 @@ import os
 
 from contextlib import contextmanager
 
+from geoalchemy2 import Geography
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -81,7 +82,7 @@ class Event(Base):
     start_time_local = sa.Column(sa.types.DateTime())
     end_time_local = sa.Column(sa.types.DateTime())
     timezone = sa.Column(sa.String(50))
-    location = sa.Column(sa.types.JSON)
+    location = sa.Column(Geography('POINT', srid=4326))
     title = sa.Column(sa.String(200))
     attendees = sa.Column(sa.types.JSON)
     capacity = sa.Column(sa.Integer())
@@ -90,6 +91,7 @@ class Event(Base):
     description_text = sa.Column(sa.Text())
     description_html = sa.Column(sa.Text())
     is_free = sa.Column(sa.Boolean())
+    online_event = sa.Column(sa.Boolean())
 
     def __str__(self):
         return '<[{}] Event {}>'.format(

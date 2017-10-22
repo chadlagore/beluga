@@ -1,10 +1,13 @@
 import datetime as dt
-from freezegun import freeze_time
 import json
 import os
 from unittest.mock import patch
 
+from freezegun import freeze_time
+from geoalchemy2 import WKTElement, func
+
 from beluga.models import Event, session_scope
+from beluga.util import wkt_to_location
 import worker as tasks
 from tests import FIXTURES_DIR
 from tests.utils import new_db
@@ -23,6 +26,13 @@ class MockEventbrite:
                 "events": json.load(infile)
             }
 
+    @classmethod
+    def get(self, *args):
+        return {
+            'latitude': "49.333",
+            'longitude': "-123.1512"
+        }
+
 
 def new_event_dict():
     return dict(
@@ -30,11 +40,7 @@ def new_event_dict():
         title='So much good stuff',
         start_time=dt.datetime(2016, 5, 5, 1, 2),
         end_time=dt.datetime(2016, 5, 5, 1, 7),
-        location={
-            'lat': 1,
-            'lon': 2,
-            'title': 'location title'
-        }
+        location=WKTElement('POINT(1 2)', srid=4326)
     )
 
 
@@ -58,7 +64,12 @@ def test_load_event():
         assert result.title == event['title']
         assert result.start_time == event['start_time']
         assert result.end_time == event['end_time']
-        assert result.location == event['location']
+
+        # Location is Well-Known Binary result (Postgis).
+        loc = wkt_to_location(result.location)
+        lat, lon = (float(i) for i in event['location'].data if i.isdigit())
+        assert loc.x == lat
+        assert loc.y == lon
 
 
 @new_db()

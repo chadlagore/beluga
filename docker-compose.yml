@@ -7,11 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-    command: [
-      "gunicorn", "--reload", "--bind", 
-      "0.0.0.0:8080", "--worker-class",
-      "sanic_gunicorn.Worker", "beluga:app"
-    ]
+    command: ./bin/webdev-entrypoint.sh
     ports:
       - "8080:8080"
     volumes:
@@ -22,7 +18,7 @@ services:
       - worker
 
   postgres:
-    build:
+    image: openmaptiles/postgis
       context: .
       dockerfile: Dockerfile.postgres
     ports:
@@ -51,9 +47,6 @@ services:
       EVENTBRITE_APP_KEY: ${EVENTBRITE_APP_KEY}
       DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
       COLLECTION_INTERVAL: 20
-    depends_on:
-      - redis
-      - postgres
     depends_on:
       - postgres
       - redis
