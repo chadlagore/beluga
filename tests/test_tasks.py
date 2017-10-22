@@ -23,6 +23,7 @@ class MockEventbrite:
                 "events": json.load(infile)
             }
 
+    @classmethod
     def get(self, *args):
         return {
             'latitude': "49.333",
