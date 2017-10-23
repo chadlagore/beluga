@@ -15,6 +15,7 @@ class MockEventbrite:
     def __init__(self, token):
         pass
 
+    @classmethod
     def event_search(self, **data):
         with open(os.path.join(
             FIXTURES_DIR, 'events.json')

@@ -6,6 +6,7 @@ class new_db:
     after a function call (presumably a test).
     """
 
+    @classmethod
     def clear_tables(self):
         meta = Base.metadata
         with session_scope() as session:

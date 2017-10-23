@@ -1,8 +1,6 @@
 from datetime import timezone as tz
 import math
 
-from asyncio import AbstractEventLoop
-
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
@@ -13,6 +11,7 @@ from beluga.auth import authorized
 api = Blueprint('api')
 
 RADIUS_OF_EARTH = 6371.0 # in kilometres
+
 
 # Basic routes.
 @api.route('/', ['GET'])
