@@ -92,7 +92,7 @@ async def event_handler(request):
 
     # Acquire the events the user requested
     with session_scope() as db_session:
-        events = db_session.query(
+        event_query = db_session.query(
             Event.title,
             Event.description_html,
             Event.start_time,
@@ -101,18 +101,28 @@ async def event_handler(request):
         )
 
         if start_time:
-            events = events.filter(Event.start_time >= start_time)
-            events = events.filter(Event.end_time <= end_time)
+            event_query = event_query.filter(Event.start_time >= start_time)
+            event_query = event_query.filter(Event.end_time <= end_time)
 
         if lat:
-            events = events.filter(
+            # Center point of search area from request
+            center_point = WKTElement("POINT({} {})".format(lon, lat))
+
+            # Apply the filter the user gave us
+            event_query = event_query.filter(
                 Event.location.ST_DWithin(
-                    WKTElement("POINT({} {})".format(lon, lat)), # Center point
+                    center_point,
                     (float(radius) * METERS_PER_KILOMETER) # Convert from km to m
                 )
             )
-
-        events = events.order_by(Event.start_time.asc())
+            
+            # Add distance column for sorting
+            event_query = event_query.order_by(
+                Event.location.ST_Distance(center_point).asc()
+            )
+        else:
+            # If we didn't get a center point, sort by start time
+            event_query = event_query.order_by(Event.start_time.asc())
 
         # Format according to API spec, not DB schema
         events = map(lambda event: {
@@ -121,7 +131,7 @@ async def event_handler(request):
             'location': geojson_to_latlon(event.location_json),
             'start_time': event.start_time.astimezone(tz.utc).isoformat(),
             'end_time': event.end_time.astimezone(tz.utc).isoformat()
-        }, events)
+        }, event_query)
 
     # No next/previous pages on this one because we're returning everything
     return json({'results': events})
