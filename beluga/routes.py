@@ -3,14 +3,16 @@ import math
 
 from asyncio import AbstractEventLoop
 
+from geoalchemy2 import WKTElement
+
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
 
+import ujson
+
 from beluga.models import session_scope, Event
 from beluga.auth import authorized
-
-from geoalchemy2.functions import ST_DWithin
 
 api = Blueprint('api')
 
@@ -87,26 +89,40 @@ async def event_handler(request):
     if lat or lon or radius:
         if not lat or not lon or not radius:
             raise abort(400, "search area must be fully specified")
-    
+
     # Acquire the events the user requested
     with session_scope() as db_session:
-        events = db_session.query(Event)
+        events = db_session.query(
+            Event.title,
+            Event.start_time,
+            Event.end_time,
+            Event.location.ST_AsGeoJSON().label("location_json")
+        )
+
         if start_time:
             events = events.filter(Event.start_time >= start_time)
             events = events.filter(Event.end_time <= end_time)
+
         if lat:
             events = events.filter(
-                Event.location.ST_DWitin(
-                    ("POINT(%s %s)" % lat, lon), # Center point
-                    (radius * METERS_PER_KILOMETER) # Convert from km to m
+                Event.location.ST_DWithin(
+                    WKTElement("POINT({} {})".format(lon, lat)), # Center point
+                    (float(radius) * METERS_PER_KILOMETER) # Convert from km to m
                 )
             )
 
-    # Sort by start_time
-    events = events.order_by(Event.start_time.asc())
+        events = events.order_by(Event.start_time.asc())
+
+        # Format according to API spec, not DB schema
+        events = map(lambda event: {
+            'title': event.title,
+            'location': geojson_to_latlon(event.location_json),
+            'start_time': event.start_time.astimezone(tz.utc).isoformat(),
+            'end_time': event.end_time.astimezone(tz.utc).isoformat()
+        }, events)
 
     # No next/previous pages on this one because we're returning everything
-    return json({'results': [i.as_dict() for i in events.all()]})
+    return json({'results': events})
 
 
 @authorized()
@@ -157,3 +173,13 @@ async def post_rsvp(token, uuid):
     on the event specified by `uuid` to True.
     """
     pass
+
+def geojson_to_latlon(geojson):
+    """Convert from GeoJSON to API lat/lon format"""
+    geo = ujson.loads(geojson)
+    assert geo["type"] == "Point"
+
+    return {
+        'lat': geo['coordinates'][1],
+        'lon': geo['coordinates'][0]
+    }

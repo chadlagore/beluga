@@ -90,9 +90,9 @@ def fetch_events(self, lat, lon, rad, **params):
                 timezone=event['start']['timezone'],
                 capacity=event['capacity'],
                 location=WKTElement('POINT({} {})'.format(
-                    venue['latitude'],
-                    venue['longitude']
-                ), srid=4326),
+                    venue['longitude'],
+                    venue['latitude']
+                )),
                 logo=event['logo'],
                 url=event['url'],
                 description_text=event['description']['text'],

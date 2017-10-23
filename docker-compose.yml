@@ -19,8 +19,6 @@ services:
 
   postgres:
     image: openmaptiles/postgis
-      context: .
-      dockerfile: Dockerfile.postgres
     ports:
       - "5432"
     environment:
