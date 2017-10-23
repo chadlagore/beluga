@@ -4,6 +4,7 @@ import logging
 from celery import Celery
 from celery.schedules import crontab
 from eventbrite import Eventbrite
+from geoalchemy2 import WKTElement
 import sqlalchemy.dialects.postgresql as psql
 
 from beluga.models import Event, session_scope
@@ -88,11 +89,10 @@ def fetch_events(self, lat, lon, rad, **params):
                 end_time_local=event['end']['local'],
                 timezone=event['start']['timezone'],
                 capacity=event['capacity'],
-                location={
-                    "lat": venue['latitude'],
-                    "lon": venue['longitude'],
-                    "venue_id": event['venue_id']
-                },
+                location=WKTElement('POINT({} {})'.format(
+                    venue['longitude'],
+                    venue['latitude']
+                )),
                 logo=event['logo'],
                 url=event['url'],
                 description_text=event['description']['text'],

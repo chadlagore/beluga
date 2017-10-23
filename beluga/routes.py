@@ -3,16 +3,20 @@ import math
 
 from asyncio import AbstractEventLoop
 
+from geoalchemy2 import WKTElement
+
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import json
+
+import ujson
 
 from beluga.models import session_scope, Event
 from beluga.auth import authorized
 
 api = Blueprint('api')
 
-RADIUS_OF_EARTH = 6371.0 # in kilometres
+METERS_PER_KILOMETER = 1000.0
 
 # Basic routes.
 @api.route('/', ['GET'])
@@ -83,48 +87,58 @@ async def event_handler(request):
             raise abort(400, "temporal range must be fully specified")
 
     if lat or lon or radius:
-        if not lat or not lon or not radius:
+        if not lat or not lon:
             raise abort(400, "search area must be fully specified")
-    
+        if not radius:
+            radius = 10
+
     # Acquire the events the user requested
     with session_scope() as db_session:
-        events = db_session.query(Event)
+        event_query = db_session.query(
+            Event.title,
+            Event.description_html,
+            Event.description_text,
+            Event.start_time,
+            Event.end_time,
+            Event.location.ST_AsGeoJSON().label("location_json")
+        )
+
         if start_time:
-            events = events.filter(Event.start_time >= start_time)
-            events = events.filter(Event.end_time <= end_time)
+            event_query = event_query.filter(Event.start_time >= start_time)
+            event_query = event_query.filter(Event.end_time <= end_time)
+
         if lat:
-            # Convert from lat/lon/radius to upper/lower bounds for lat/lon
+            # Center point of search area from request
+            center_point = WKTElement("POINT({} {})".format(lon, lat))
 
-            # We need to find the length of one degree longitude at the
-            # center point we were given. To do so, we take the cosine
-            # of the latitude we are given and multiply that by the length
-            # of one degree longitude at the equator.
-            lat_rads = (math.pi * float(lat)) / 180.0 # given lat in radians
-            lon_factor = 1.0 / ((math.pi / 180.0) * RADIUS_OF_EARTH * math.cos(lat_rads))
+            # Apply the filter the user gave us
+            event_query = event_query.filter(
+                Event.location.ST_DWithin(
+                    center_point,
+                    (float(radius) * METERS_PER_KILOMETER) # Convert from km to m
+                )
+            )
 
-            # Using an approximation here for simplicity.
-            # The distance of a single degree of latitude varies around
-            # the globe, but does not vary as dramatically as longitude.
-            # We therefore can use an approximation here. More info at
-            # https://en.wikipedia.org/wiki/Latitude#Length_of_a_degree_of_latitude.
-            lat_factor = 1.0 / 111.0 # 1 deg lat ~= 111 km (give or take 1 km)
+            # Add and sort by distance
+            distance_col = Event.location.ST_Distance(center_point).label('distance')
+            event_query = event_query.add_column(distance_col).order_by(distance_col.asc())
+        else:
+            # If we didn't get a center point, sort by start time
+            event_query = event_query.order_by(Event.start_time.asc())
 
-            min_lon = float(lon) - (float(radius) * lon_factor)
-            max_lon = float(lon) + (float(radius) * lon_factor)
-
-            min_lat = float(lat) - (float(radius) * lat_factor)
-            max_lat = float(lat) + (float(radius) * lat_factor)
-
-            # TODO once we can query by location, the query
-            # should be modified here to reflect the location we 
-            # got from the client.
-            pass
-
-    # Sort by start_time for now.
-    events = events.order_by(Event.start_time.asc())
+        # Format according to API spec, not DB schema
+        events = map(lambda event: {
+            'title': event.title,
+            'description_html': event.description_html,
+            'description_text': event.description_text,
+            'location': geojson_to_latlon(event.location_json),
+            'start_time': event.start_time.astimezone(tz.utc).isoformat(),
+            'end_time': event.end_time.astimezone(tz.utc).isoformat(),
+            'distance': (event.distance if lat else None)
+        }, event_query)
 
     # No next/previous pages on this one because we're returning everything
-    return json({'results': [i.as_dict() for i in events.all()]})
+    return json({'results': events})
 
 
 @authorized()
@@ -175,3 +189,13 @@ async def post_rsvp(token, uuid):
     on the event specified by `uuid` to True.
     """
     pass
+
+def geojson_to_latlon(geojson):
+    """Convert from GeoJSON to API lat/lon format"""
+    geo = ujson.loads(geojson)
+    assert geo["type"] == "Point"
+
+    return {
+        'lat': geo['coordinates'][1],
+        'lon': geo['coordinates'][0]
+    }

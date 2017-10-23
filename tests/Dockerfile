@@ -1,5 +1,8 @@
 FROM python:3.6-stretch
 
+# Install psql client.
+RUN apt-get update && apt-get install -y postgresql
+
 # Install production dependencies.
 ADD requirements.txt /env/requirements.txt
 ADD worker/requirements.txt /env/requirements-worker.txt
