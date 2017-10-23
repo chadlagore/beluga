@@ -119,10 +119,9 @@ async def event_handler(request):
                 )
             )
 
-            # Add distance column for sorting
-            event_query = event_query.order_by(
-                Event.location.ST_Distance(center_point).asc()
-            )
+            # Add and sort by distance
+            distance_col = Event.location.ST_Distance(center_point).label('distance')
+            event_query = event_query.add_column(distance_col).order_by(distance_col.asc())
         else:
             # If we didn't get a center point, sort by start time
             event_query = event_query.order_by(Event.start_time.asc())
@@ -134,7 +133,8 @@ async def event_handler(request):
             'description_text': event.description_text,
             'location': geojson_to_latlon(event.location_json),
             'start_time': event.start_time.astimezone(tz.utc).isoformat(),
-            'end_time': event.end_time.astimezone(tz.utc).isoformat()
+            'end_time': event.end_time.astimezone(tz.utc).isoformat(),
+            'distance': (event.distance if lat else None)
         }, event_query)
 
     # No next/previous pages on this one because we're returning everything
