@@ -87,14 +87,17 @@ async def event_handler(request):
             raise abort(400, "temporal range must be fully specified")
 
     if lat or lon or radius:
-        if not lat or not lon or not radius:
+        if not lat or not lon:
             raise abort(400, "search area must be fully specified")
+        if not radius:
+            radius = 10
 
     # Acquire the events the user requested
     with session_scope() as db_session:
         event_query = db_session.query(
             Event.title,
             Event.description_html,
+            Event.description_text,
             Event.start_time,
             Event.end_time,
             Event.location.ST_AsGeoJSON().label("location_json")
@@ -115,7 +118,7 @@ async def event_handler(request):
                     (float(radius) * METERS_PER_KILOMETER) # Convert from km to m
                 )
             )
-            
+
             # Add distance column for sorting
             event_query = event_query.order_by(
                 Event.location.ST_Distance(center_point).asc()
@@ -127,7 +130,8 @@ async def event_handler(request):
         # Format according to API spec, not DB schema
         events = map(lambda event: {
             'title': event.title,
-            'description': event.description_html,
+            'description_html': event.description_html,
+            'description_text': event.description_text,
             'location': geojson_to_latlon(event.location_json),
             'start_time': event.start_time.astimezone(tz.utc).isoformat(),
             'end_time': event.end_time.astimezone(tz.utc).isoformat()
