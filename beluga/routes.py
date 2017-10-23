@@ -94,6 +94,7 @@ async def event_handler(request):
     with session_scope() as db_session:
         events = db_session.query(
             Event.title,
+            Event.description_html,
             Event.start_time,
             Event.end_time,
             Event.location.ST_AsGeoJSON().label("location_json")
@@ -116,6 +117,7 @@ async def event_handler(request):
         # Format according to API spec, not DB schema
         events = map(lambda event: {
             'title': event.title,
+            'description': event.description_html,
             'location': geojson_to_latlon(event.location_json),
             'start_time': event.start_time.astimezone(tz.utc).isoformat(),
             'end_time': event.end_time.astimezone(tz.utc).isoformat()
