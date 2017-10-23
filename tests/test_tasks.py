@@ -15,6 +15,7 @@ class MockEventbrite:
     def __init__(self, token):
         pass
 
+    @classmethod
     def event_search(self, **data):
         with open(os.path.join(
             FIXTURES_DIR, 'events.json')
@@ -115,6 +116,9 @@ def test_events_cleanup_daily():
     # Freeze time somewhere around tomorrow morning.
     with freeze_time("2016-05-06 01:21:34"):
         tasks.clear_old_events()
+
+    with session_scope() as db_session:
+        assert db_session.query(Event).count() == 0
 
     with session_scope() as db_session:
         assert db_session.query(Event).count() == 0
