@@ -1,5 +1,4 @@
 import datetime as dt
-import json
 import logging
 
 from celery import Celery
@@ -79,6 +78,7 @@ def fetch_events(self, lat, lon, rad, **params):
     # Produce a new task to load every event.
     with session_scope() as db_session:
         for event in result['events']:
+            venue = eb.get('/venues/{}'.format(event['venue_id']))
             new_event = dict(
                 id=event['id'],
                 title=event['name']['text'],
@@ -89,21 +89,33 @@ def fetch_events(self, lat, lon, rad, **params):
                 timezone=event['start']['timezone'],
                 capacity=event['capacity'],
                 location={
-                    "lat": lat,  # TODO: This is very broken.
-                    "lon": lon,
+                    "lat": venue['latitude'],
+                    "lon": venue['longitude'],
                     "venue_id": event['venue_id']
                 },
                 logo=event['logo'],
                 url=event['url'],
                 description_text=event['description']['text'],
                 description_html=event['description']['html'],
-                is_free=event['is_free']
+                is_free=event['is_free'],
+                online_event=is_online(event, venue)
             )
 
             # Load event into database.
             load_event(new_event, db_session)
 
     return result
+
+
+def is_online(event, venue):
+    """Returns true if the event is online.
+    Eventbrite is a bit inconsistent with this
+    in the event object itself, so as a backup,
+    check if lat/lon are zero.
+    """
+    lat = float(venue['latitude'])
+    lon = float(venue['longitude'])
+    return event['online_event'] or (lat == 0 and lon == 0)
 
 
 def load_event(event_params, session):
