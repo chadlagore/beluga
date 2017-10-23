@@ -4,7 +4,7 @@ services:
   - docker
 
 script:
-  - docker-compose run test pytest -vvv
+  - docker-compose run test ./bin/test-entrypoint.sh
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
