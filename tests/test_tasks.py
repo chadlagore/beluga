@@ -119,6 +119,3 @@ def test_events_cleanup_daily():
 
     with session_scope() as db_session:
         assert db_session.query(Event).count() == 0
-
-    with session_scope() as db_session:
-        assert db_session.query(Event).count() == 0
