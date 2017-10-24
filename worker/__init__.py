@@ -88,7 +88,7 @@ def fetch_events(self, lat, lon, rad, **params):
             data.update({'page': page})
             result = eb.event_search(**data)
             logger.info('{} of {} pages: collected {} events'.format(
-                page, config.EVENTBRITE_EVENT_PAGES,
+                num_pages,
                 result['pagination']['page_size']
                 )
             )
