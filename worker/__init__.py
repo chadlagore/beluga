@@ -53,8 +53,6 @@ def fetch_events(self, lat, lon, rad, **params):
         rad (str): A radius for the circle.
         **params : Additional paramters to be passed to the
             eventbrite client.
-
-    TODO: Deal with pagination from eventbrite.
     """
     assert config.EVENTBRITE_APP_KEY, \
         'Must set EVENTBRITE_APP_KEY to run eventbrite tasks'
@@ -73,36 +71,57 @@ def fetch_events(self, lat, lon, rad, **params):
     # Add additional parameters.
     data.update(params)
 
-    # Request.
-    result = eb.event_search(**data)
+    # Find out how many pages to collect.
+    pagination = eb.event_search(**data)['pagination']
+    num_pages = pagination['page_count']
+    to_collect = min(num_pages, config.EVENTBRITE_EVENT_PAGES)
 
     # Produce a new task to load every event.
     with session_scope() as db_session:
-        for event in result['events']:
-            venue = eb.get('/venues/{}'.format(event['venue_id']))
-            new_event = dict(
-                id=event['id'],
-                title=event['name']['text'],
-                start_time=event['start']['utc'],
-                end_time=event['end']['utc'],
-                start_time_local=event['start']['local'],
-                end_time_local=event['end']['local'],
-                timezone=event['start']['timezone'],
-                capacity=event['capacity'],
-                location=WKTElement('POINT({} {})'.format(
-                    venue['longitude'],
-                    venue['latitude']
-                )),
-                logo=event['logo'],
-                url=event['url'],
-                description_text=event['description']['text'],
-                description_html=event['description']['html'],
-                is_free=event['is_free'],
-                online_event=is_online(event, venue)
+
+        # Collect several pages.
+        logger.info('Collecting {} pages'.format(num_pages))
+        logger.info(pagination)
+        for page in range(1, to_collect+1):
+
+            # Collect this page.
+            data.update({'page': page})
+            result = eb.event_search(**data)
+            logger.info('{} of {} pages: collected {} events'.format(
+                page, config.EVENTBRITE_EVENT_PAGES,
+                result['pagination']['page_size']
+                )
             )
 
-            # Load event into database.
-            load_event(new_event, db_session)
+            for event in result['events']:
+
+                # Collect venue for lat/lon.
+                venue = eb.get('/venues/{}'.format(event['venue_id']))
+
+                # Build a payload with each event.
+                new_event = dict(
+                    id=event['id'],
+                    title=event['name']['text'],
+                    start_time=event['start']['utc'],
+                    end_time=event['end']['utc'],
+                    start_time_local=event['start']['local'],
+                    end_time_local=event['end']['local'],
+                    timezone=event['start']['timezone'],
+                    capacity=event['capacity'],
+                    location=WKTElement('POINT({} {})'.format(
+                        venue['longitude'],
+                        venue['latitude']
+                    )),
+                    logo=event['logo'],
+                    url=event['url'],
+                    description_text=event['description']['text'],
+                    description_html=event['description']['html'],
+                    is_free=event['is_free'],
+                    online_event=is_online(event, venue)
+                )
+
+                # Load event into database.
+                load_event(new_event, db_session)
 
     return result
 
