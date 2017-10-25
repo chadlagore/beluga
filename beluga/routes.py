@@ -69,7 +69,7 @@ async def event_handler(request):
         in RFC 3339 format.
     @apiParam {Number} end_time The end of the temporal range,
         in RFC 3339 format.
-    @apiParam {Number} [num_events] The number of events to return
+    @apiParam {Number} [limit] The number of events to return
         (default 50).
 
     @apiSuccess {Array} results Event objects.
