@@ -125,6 +125,9 @@ def fetch_events(self, lat, lon, rad, **params):
                 # Load event into database.
                 load_event(new_event, db_session)
 
+            # Commit intermediate results.
+            db_session.commit()
+
     return result
 
 

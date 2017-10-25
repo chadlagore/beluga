@@ -69,6 +69,8 @@ async def event_handler(request):
         in RFC 3339 format.
     @apiParam {Number} end_time The end of the temporal range,
         in RFC 3339 format.
+    @apiParam {Number} [num_events] The number of events to return
+        (default 50).
 
     @apiSuccess {Array} results Event objects.
     @apiSuccess {String} next URL of the next page of results.
@@ -80,6 +82,7 @@ async def event_handler(request):
     lat = request.args.get('lat')
     lon = request.args.get('lon')
     radius = request.args.get('radius')
+    limit = request.args.get('limit', 50)
 
     # Validate the parameters we got, if any
     if start_time or end_time:
@@ -125,6 +128,9 @@ async def event_handler(request):
         else:
             # If we didn't get a center point, sort by start time
             event_query = event_query.order_by(Event.start_time.asc())
+
+        # Apply limit.
+        event_query = event_query.limit(limit)
 
         # Format according to API spec, not DB schema
         events = map(lambda event: {
