@@ -87,9 +87,11 @@ def fetch_events(self, lat, lon, rad, **params):
             # Collect this page.
             data.update({'page': page})
             result = eb.event_search(**data)
-            logger.info('{} of {} pages: collected {} events'.format(
-                num_pages,
-                result['pagination']['page_size']
+            logger.info(
+                'Processing {} of {} pages: loading {} events...'.format(
+                    page,
+                    to_collect,
+                    result['pagination']['page_size']
                 )
             )
 
