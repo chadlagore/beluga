@@ -6,7 +6,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 from geoalchemy2 import WKTElement
 
-from beluga.models import Event, session_scope
+from beluga.models import Event, Category, session_scope
 from beluga.util import wkt_to_location
 import worker as tasks
 from tests import FIXTURES_DIR
@@ -28,6 +28,14 @@ class MockEventbrite:
                     "page_count": 29
                 }, "events": json.load(infile)
             }
+
+    def get_categories(self):
+        return {
+            'categories': [{
+                'id': 1,
+                'name': 'new_category'
+            }]
+        }
 
     @classmethod
     def get(self, *args):
@@ -129,3 +137,11 @@ def test_events_cleanup_daily():
 
     with session_scope() as db_session:
         assert db_session.query(Event).count() == 0
+
+
+@new_db()
+@patch('worker.Eventbrite', new=MockEventbrite)
+def test_update_categories():
+    tasks.update_categories(force=True)
+    with session_scope() as db_session:
+        db_session.query(Category).count() == 1
