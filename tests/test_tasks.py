@@ -4,7 +4,7 @@ import os
 from unittest.mock import patch
 
 from freezegun import freeze_time
-from geoalchemy2 import WKTElement, func
+from geoalchemy2 import WKTElement
 
 from beluga.models import Event, session_scope
 from beluga.util import wkt_to_location
@@ -23,7 +23,10 @@ class MockEventbrite:
             FIXTURES_DIR, 'events.json')
         ) as infile:
             return {
-                "events": json.load(infile)
+                "pagination": {
+                    "page_size": 50,
+                    "page_count": 29
+                }, "events": json.load(infile)
             }
 
     @classmethod
@@ -48,7 +51,7 @@ def new_event_dict():
 @patch('worker.load_event')
 def test_fetch_events(mock_load_event):
     tasks.fetch_events(lat=1, lon=2, rad=3)
-    assert mock_load_event.call_count == 5
+    assert mock_load_event.call_count == 145
 
 
 @new_db()
