@@ -123,8 +123,13 @@ async def event_handler(request):
             )
 
             # Add and sort by distance
-            distance_col = Event.location.ST_Distance(center_point).label('distance')
-            event_query = event_query.add_column(distance_col).order_by(distance_col.asc())
+            distance_col = Event.location.ST_Distance(center_point)
+            event_query = (
+                event_query.add_column(distance_col)
+                           .order_by(distance_col.asc())
+                           .where(distance_col.isnot(None))
+                           .label('distance')
+                )
         else:
             # If we didn't get a center point, sort by start time
             event_query = event_query.order_by(Event.start_time.asc())
