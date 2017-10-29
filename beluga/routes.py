@@ -1,3 +1,4 @@
+import datetime as dt
 from datetime import timezone as tz
 import math
 
@@ -11,12 +12,14 @@ from sanic.response import json
 
 import ujson
 
-from beluga.models import session_scope, Event
+from beluga.models import session_scope, Event, Category
 from beluga.auth import authorized
+from beluga import config
 
 api = Blueprint('api')
 
 METERS_PER_KILOMETER = 1000.0
+
 
 # Basic routes.
 @api.route('/', ['GET'])
@@ -76,75 +79,83 @@ async def event_handler(request):
     @apiSuccess {String} next URL of the next page of results.
     @apiSuccess {String} previous URL of the previous page of results.
     """
+    start_time = request.args.get('start_time', None)
+    end_time = request.args.get('end_time', None)
 
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
-    lat = request.args.get('lat')
-    lon = request.args.get('lon')
-    radius = request.args.get('radius')
+    # Parse date query.
+    if start_time:
+        try:
+            start_time = dt.datetime.strptime(start_time, config.DATE_FMT)
+        except ValueError:
+            abort(400, f'start_time ({start_time}) must in format YYYY-MM-DD')
+    else:
+        start_time = dt.date.min
+    
+    if end_time:
+        try:
+            end_time = dt.datetime.strptime(end_time, config.DATE_FMT)
+        except ValueError:
+            abort(400, f'end_time ({end_time}) must in format YYYY-MM-DD')
+    else:
+        end_time = dt.date.max
+
+    # TODO: Remove default lat/lon when larger area collected.
+    lat = request.args.get('lat', config.DEFAULT_LAT)
+    lon = request.args.get('lon', config.DEFAULT_LON)
+    radius = request.args.get('radius', config.DEFAULT_RAD.strip('km'))
     limit = request.args.get('limit', 50)
 
-    # Validate the parameters we got, if any
-    if start_time or end_time:
-        if not start_time or not end_time:
-            raise abort(400, "temporal range must be fully specified")
+    try:
+        dist = float(radius) * METERS_PER_KILOMETER
+        lat = float(lat)
+        lon = float(lon)
+    except ValueError:
+        abort(400, 'radius, lat and lon must be numeric')
 
-    if lat or lon or radius:
-        if not lat or not lon:
-            raise abort(400, "search area must be fully specified")
-        if not radius:
-            radius = 10
+    try:
+        limit = int(limit)
+    except ValueError:
+        abort(400, f'limit {limit} must be numeric')
 
-    # Acquire the events the user requested
+    # Center point of search area from request.
+    center_point = WKTElement("POINT({} {})".format(lon, lat))
+    distance_col = Event.location.ST_Distance(center_point).label('distance')
+
     with session_scope() as db_session:
-        event_query = db_session.query(
+        cols = [
             Event.title,
             Event.description_html,
             Event.description_text,
             Event.start_time,
             Event.end_time,
-            Event.location.ST_AsGeoJSON().label("location_json")
+            Event.location.ST_AsGeoJSON().label("location_json"),
+            Category.name.label('category'),
+            distance_col
+        ]
+
+        # Build SQL query.
+        event_query = (
+            db_session
+            .query(*cols)
+            .filter(Event.start_time >= start_time)
+            .filter(Event.end_time <= end_time)
+            .join(Category, Event.category_id == Category.category_id)
+            .filter(Event.location.ST_DWithin(center_point, dist))
+            .order_by(distance_col.asc())
+            .limit(limit)
         )
 
-        if start_time:
-            event_query = event_query.filter(Event.start_time >= start_time)
-            event_query = event_query.filter(Event.end_time <= end_time)
-
-        if lat:
-            # Center point of search area from request
-            center_point = WKTElement("POINT({} {})".format(lon, lat))
-
-            # Apply the filter the user gave us
-            event_query = event_query.filter(
-                Event.location.ST_DWithin(
-                    center_point,
-                    (float(radius) * METERS_PER_KILOMETER) # Convert from km to m
-                )
-            )
-
-            # Add and sort by distance
-            distance_col = Event.location.ST_Distance(center_point).label('distance')
-            event_query = event_query.add_column(distance_col).order_by(distance_col.asc())
-        else:
-            # If we didn't get a center point, sort by start time
-            event_query = event_query.order_by(Event.start_time.asc())
-
-        # Apply limit.
-        event_query = event_query.limit(limit)
-
         # Format according to API spec, not DB schema
-        events = map(lambda event: {
-            'title': event.title,
-            'description_html': event.description_html,
-            'description_text': event.description_text,
-            'location': geojson_to_latlon(event.location_json),
-            'start_time': event.start_time.astimezone(tz.utc).isoformat(),
-            'end_time': event.end_time.astimezone(tz.utc).isoformat(),
-            'distance': (event.distance if lat else None)
-        }, event_query)
-
-    # No next/previous pages on this one because we're returning everything
-    return json({'results': events})
+        return json({'results': [{
+                'title': e.title,
+                'description_html': e.description_html,
+                'description_text': e.description_text,
+                'location': geojson_to_latlon(e.location_json),
+                'start_time': e.start_time.astimezone(tz.utc).isoformat(),
+                'end_time': e.end_time.astimezone(tz.utc).isoformat(),
+                'distance': e.distance,
+                'category': e.category
+            } for e in event_query]})
 
 
 @authorized()
@@ -196,6 +207,7 @@ async def post_rsvp(token, uuid):
     """
     pass
 
+
 def geojson_to_latlon(geojson):
     """Convert from GeoJSON to API lat/lon format"""
     geo = ujson.loads(geojson)
@@ -205,3 +217,22 @@ def geojson_to_latlon(geojson):
         'lat': geo['coordinates'][1],
         'lon': geo['coordinates'][0]
     }
+
+
+@authorized()
+@api.route('/categories', ['GET'])
+async def categories_handler(request):
+    """
+    @api {post} /categories Get event categories.
+
+    @apiDescription Collect available categories.
+
+    @apiName CategoryList
+    @apiGroup Categories
+    """
+    with session_scope() as session:
+        return json({
+            "results": [
+                c.name for c in session.query(Category)
+            ]
+        })

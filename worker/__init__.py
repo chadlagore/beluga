@@ -8,6 +8,7 @@ from geoalchemy2 import WKTElement
 import sqlalchemy.dialects.postgresql as psql
 
 from beluga.models import Event, Category, session_scope
+import beluga.config
 from worker import config
 
 
@@ -28,9 +29,9 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         config.COLLECTION_INTERVAL,
         fetch_events.s(
-            lat=config.VANCOUVER_LAT,
-            lon=config.VANCOUVER_LON,
-            rad=config.VANCOUVER_RAD
+            lat=beluga.config.VANCOUVER_LAT,
+            lon=beluga.config.VANCOUVER_LON,
+            rad=beluga.config.VANCOUVER_RAD
         ),
         expires=60
     )
@@ -103,35 +104,10 @@ def fetch_events(self, lat, lon, rad, **params):
                 )
             )
 
+            # Get venue for each event and load.
             for event in result['events']:
-
-                # Collect venue for lat/lon.
                 venue = eb.get('/venues/{}'.format(event['venue_id']))
-
-                # Build a payload with each event.
-                new_event = dict(
-                    id=event['id'],
-                    title=event['name']['text'],
-                    start_time=event['start']['utc'],
-                    end_time=event['end']['utc'],
-                    start_time_local=event['start']['local'],
-                    end_time_local=event['end']['local'],
-                    timezone=event['start']['timezone'],
-                    capacity=event['capacity'],
-                    location=WKTElement('POINT({} {})'.format(
-                        venue['longitude'],
-                        venue['latitude']
-                    )),
-                    logo=event['logo'],
-                    url=event['url'],
-                    description_text=event['description']['text'],
-                    description_html=event['description']['html'],
-                    is_free=event['is_free'],
-                    online_event=is_online(event, venue),
-                    category_id=event['category_id']
-                )
-
-                # Load event into database.
+                new_event = prepare_event(event, venue)
                 load_event(new_event, db_session)
 
     return result
@@ -208,3 +184,28 @@ def update_categories(force=True):
                         .on_conflict_do_update(
                             index_elements=[Category.category_id],
                             set_=params))
+
+
+def prepare_event(event, venue):
+    """Prepares an event for loading."""
+    return dict(
+        id=event['id'],
+        title=event['name']['text'],
+        start_time=event['start']['utc'],
+        end_time=event['end']['utc'],
+        start_time_local=event['start']['local'],
+        end_time_local=event['end']['local'],
+        timezone=event['start']['timezone'],
+        capacity=event['capacity'],
+        location=WKTElement('POINT({} {})'.format(
+            venue['longitude'],
+            venue['latitude']
+        )),
+        logo=event['logo'],
+        url=event['url'],
+        description_text=event['description']['text'],
+        description_html=event['description']['html'],
+        is_free=event['is_free'],
+        online_event=is_online(event, venue),
+        category_id=event['category_id']
+    )
