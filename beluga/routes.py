@@ -120,7 +120,7 @@ async def event_handler(request):
     category = request.args.get('category', None)
 
     # Center point of search area from request.
-    center_point = WKTElement("POINT({} {})".format(lon, lat))
+    center_point = WKTElement(f"POINT({lon} {lat})")
     distance_col = Event.location.ST_Distance(center_point).label('distance')
 
     with session_scope() as db_session:
