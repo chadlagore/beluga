@@ -9,4 +9,4 @@ while ! pg_isready -h postgres -d beluga -U beluga; do
 done
 
 # Run tests.
-pytest -vvv
+pytest -vvv --cov=beluga --cov=worker
