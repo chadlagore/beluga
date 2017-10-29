@@ -106,3 +106,17 @@ def test_category_endpoint():
     _, response = app.test_client.get(route)
     assert len(response.json['results']) == 1
     assert response.json['results'][0] == 'new_cat1'
+
+
+@new_db()
+@mock_events()
+def test_category_filter():
+    route = '/events?category=new_cat1'
+    _, response = app.test_client.get(route)
+    assert len(response.json['results']) == 1
+    assert response.json['results'][0]['category'] == 'new_cat1'
+
+    route = '/events?category=new_cat2'
+    _, response = app.test_client.get(route)
+    assert len(response.json['results']) == 1
+    assert response.json['results'][0]['category'] == 'new_cat2'

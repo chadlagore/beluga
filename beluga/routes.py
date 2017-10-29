@@ -117,6 +117,8 @@ async def event_handler(request):
     except ValueError:
         abort(400, f'limit {limit} must be numeric')
 
+    category = request.args.get('category', None)
+
     # Center point of search area from request.
     center_point = WKTElement("POINT({} {})".format(lon, lat))
     distance_col = Event.location.ST_Distance(center_point).label('distance')
@@ -142,8 +144,10 @@ async def event_handler(request):
             .join(Category, Event.category_id == Category.category_id)
             .filter(Event.location.ST_DWithin(center_point, dist))
             .order_by(distance_col.asc())
-            .limit(limit)
         )
+
+        if category:
+            event_query = event_query.filter(Category.name == category)
 
         # Format according to API spec, not DB schema
         return json({'results': [{
@@ -155,7 +159,7 @@ async def event_handler(request):
                 'end_time': e.end_time.astimezone(tz.utc).isoformat(),
                 'distance': e.distance,
                 'category': e.category
-            } for e in event_query]})
+            } for e in event_query.limit(limit)]})
 
 
 @authorized()
