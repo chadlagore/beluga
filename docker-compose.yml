@@ -44,6 +44,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       EVENTBRITE_APP_KEY: ${EVENTBRITE_APP_KEY}
       DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
+      COLLECTION_INTERVAL: 40
     depends_on:
       - postgres
       - redis
