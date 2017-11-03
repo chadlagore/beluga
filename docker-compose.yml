@@ -60,6 +60,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       EVENTBRITE_APP_KEY: NOT_A_KEY
       DATABASE_URL: postgres://beluga:beluga@postgres:5432/beluga
+      COVERALLS_REPO_TOKEN: ${COVERALLS_REPO_TOKEN}
     command: /bin/true
     depends_on:
       - postgres

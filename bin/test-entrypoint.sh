@@ -12,3 +12,4 @@ done
 
 # Run tests.
 py.test --cov=./ -vvv --cov-report term-missing
+coveralls

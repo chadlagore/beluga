@@ -3,9 +3,6 @@ sudo: required
 services:
   - docker
 
-install:
-  - sudo pip install codecov
-
 script:
   - docker-compose run test ./bin/test-entrypoint.sh
 
@@ -13,4 +10,3 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     ./bin/deploy.sh heroku;
     fi
-  - codecov
