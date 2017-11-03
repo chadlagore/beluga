@@ -16,4 +16,4 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     ./bin/deploy.sh heroku;
     fi
-  - coveralls -d .coverage
+  - sudo coveralls -d .coverage
