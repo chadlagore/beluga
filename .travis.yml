@@ -3,6 +3,9 @@ sudo: required
 services:
   - docker
 
+install:  
+  - pip install python-coveralls
+
 script:
   - docker-compose run test ./bin/test-entrypoint.sh
 
@@ -10,3 +13,4 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     ./bin/deploy.sh heroku;
     fi
+  - coveralls -d .coverage
