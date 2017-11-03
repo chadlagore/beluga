@@ -11,4 +11,4 @@ while ! pg_isready -h postgres -d beluga -U beluga; do
 done
 
 # Run tests.
-pytest -vvv --cov=beluga --cov=worker --cov-report term-missing
+py.test --cov=./ -vvv --cov-report term-missing

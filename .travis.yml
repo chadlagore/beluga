@@ -1,14 +1,10 @@
 sudo: required
-language: python
-python:
-  - "2.7"
 
 services:
   - docker
 
-install:  
-  - sudo pip install python-coveralls
-  - sudo pip install coveralls
+install:
+  - sudo pip install codecov
 
 script:
   - docker-compose run test ./bin/test-entrypoint.sh
@@ -17,4 +13,4 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     ./bin/deploy.sh heroku;
     fi
-  - sudo coveralls -d .coverage
+  - codecov
