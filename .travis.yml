@@ -8,6 +8,7 @@ services:
 
 install:  
   - sudo pip install python-coveralls
+  - sudo pip install coveralls
 
 script:
   - docker-compose run test ./bin/test-entrypoint.sh
