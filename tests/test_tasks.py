@@ -6,11 +6,11 @@ from unittest.mock import patch
 from freezegun import freeze_time
 from geoalchemy2 import WKTElement
 
-from beluga.models import Event, session_scope
+from beluga.models import Event, Category, session_scope
 from beluga.util import wkt_to_location
 import worker as tasks
 from tests import FIXTURES_DIR
-from tests.utils import new_db
+from tests.utils import new_db, add_db_categories
 
 
 class MockEventbrite:
@@ -29,6 +29,14 @@ class MockEventbrite:
                 }, "events": json.load(infile)
             }
 
+    def get_categories(self):
+        return {
+            'categories': [{
+                'id': 1,
+                'name': 'new_category'
+            }]
+        }
+
     @classmethod
     def get(self, *args):
         return {
@@ -43,7 +51,8 @@ def new_event_dict():
         title='So much good stuff',
         start_time=dt.datetime(2016, 5, 5, 1, 2),
         end_time=dt.datetime(2016, 5, 5, 1, 7),
-        location=WKTElement('POINT(1 2)', srid=4326)
+        location=WKTElement('POINT(1 2)', srid=4326),
+        category_id="1"
     )
 
 
@@ -55,6 +64,7 @@ def test_fetch_events(mock_load_event):
 
 
 @new_db()
+@add_db_categories([{'category_id': 1, 'name': 'new_cat'}])
 def test_load_event():
     """Enforce that load_event drops a new event into the
     database.
@@ -76,6 +86,7 @@ def test_load_event():
 
 
 @new_db()
+@add_db_categories([{'category_id': 1, 'name': 'new_cat'}])
 def test_events_dont_get_clobbered():
     """Enforce that multiple event adds don't clobber existing
     events (they may have accumulated attendees in our db).
@@ -111,6 +122,7 @@ def test_events_dont_get_clobbered():
 
 
 @new_db()
+@add_db_categories([{'category_id': 1, 'name': 'new_cat'}])
 @patch('worker.config.STALE_EVENT_DAYS', new=0)
 def test_events_cleanup_daily():
     """Enforce that events get cleaned up daily."""
@@ -125,3 +137,11 @@ def test_events_cleanup_daily():
 
     with session_scope() as db_session:
         assert db_session.query(Event).count() == 0
+
+
+@new_db()
+@patch('worker.Eventbrite', new=MockEventbrite)
+def test_update_categories():
+    tasks.update_categories(force=True)
+    with session_scope() as db_session:
+        db_session.query(Category).count() == 1

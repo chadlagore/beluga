@@ -97,8 +97,31 @@ class Event(Base):
     description_html = sa.Column(sa.Text())
     is_free = sa.Column(sa.Boolean())
     online_event = sa.Column(sa.Boolean())
+    category_id = sa.Column(
+        sa.BigInteger(),
+        sa.ForeignKey("categories.category_id"),
+        nullable=True  # eventbrite has null categories :(
+    )
 
     def __str__(self):
         return '<[{}] Event {}>'.format(
+            self.id, self.title
+        )
+
+
+class Category(Base):
+    """An category represents an event genre as specifed by eventbrite."""
+
+    __tablename__ = 'categories'
+
+    category_id = sa.Column(
+        sa.BigInteger,
+        primary_key=True
+    )
+
+    name = sa.Column(sa.String(50), nullable=False)
+
+    def __str__(self):
+        return '<[{}] Category {}>'.format(
             self.id, self.title
         )

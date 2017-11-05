@@ -1,9 +1,5 @@
 import os
 
-# Geo config (this is an odd place to put this isnt it).
-VANCOUVER_LAT = 49.241
-VANCOUVER_LON = -123.1073
-VANCOUVER_RAD = "10km"
 
 # Celery eats this stuff automagically.
 timezone = 'America/Vancouver'

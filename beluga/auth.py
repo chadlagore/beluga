@@ -86,9 +86,6 @@ async def google(token):
     try:
         idinfo = id_token.verify_oauth2_token(token, grequests.Request(), config.GOOGLE_CLIENT_ID)
 
-        import logging
-        logging.info(str(idinfo))
-
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('bad issuer in token')
     except ValueError or KeyError:
