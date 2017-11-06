@@ -1,7 +1,12 @@
 *.pyc
 .cache
+.env-file
 
 # Documentation
 node_modules
 package-lock.json
 docs 
+
+# Testing
+.coverage
+coverage.xml

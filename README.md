@@ -3,6 +3,8 @@ beluga
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/94890da29c40447bb95c93a5bb680e56)](https://www.codacy.com/app/chad.d.lagore/beluga?utm_source=github.com&utm_medium=referral&utm_content=chadlagore/beluga&utm_campaign=badger)
 
+[![Coverage Status](https://coveralls.io/repos/github/chadlagore/beluga/badge.svg?branch=master)](https://coveralls.io/github/chadlagore/beluga?branch=master)
+
 Event tracking, rating and prioritizing for your event going pleasure.
 
 
