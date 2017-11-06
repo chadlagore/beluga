@@ -56,9 +56,6 @@ def check_request_for_auth_status(request):
     Args:
         request: the request from the client.
     """
-    if os.environ.get("BELUGA_TEST") == "true":
-        return True
-
     # Validate header presence
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -72,16 +69,27 @@ def check_request_for_auth_status(request):
         return False
     bearer_token = auth_components[1]
 
+    if os.environ.get('BELUGA_TEST') == 'true':
+        if bearer_token == 'GOOD_TEST_TOKEN':
+            return True
+        elif bearer_token == 'BAD_TEST_TOKEN':
+            return False
+
     # Validate signature
     try:
         user_id = unsign(BEARER_TOKEN_TYPE, bearer_token)
-    except BadSignature:
+    except BadSignature as e:
+        import logging
+        logging.info(str(e))
         return False
 
     # Validate user exists
     with session_scope() as db_session:
         query = db_session.query(User).filter(User.id == user_id)
-        return db_session.query(query.exists()).scalar()
+        exists = db_session.query(query.exists()).scalar()
+        import logging
+        logging.info(str(exists))
+        return exists
 
 async def google(token):
     """Create a session using a Google OAuth2 token"""

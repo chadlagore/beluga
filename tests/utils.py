@@ -4,7 +4,7 @@ import sqlalchemy.dialects.postgresql as psql
 
 from beluga import config as conf
 from beluga.models import (
-    Base, session_scope, Category, Event
+    Base, session_scope, Category, Event, User
 )
 from worker import prepare_event
 
@@ -91,6 +91,40 @@ class mock_events:
                          .on_conflict_do_update(
                              index_elements=[Event.id],
                              set_=prepped))
+                session.execute(q)
+
+    def __call__(self, f):
+        def wrapped_f(*args):
+            self.add_events()
+            f(*args)
+        return wrapped_f
+
+class mock_users:
+    """A decorator for adding users to a database."""
+
+    def __init__(self):
+        pass
+
+    # Have to add the categoies before loading events
+    # due to foreign key constraint.
+    @add_db_categories([
+        {'category_id': 102, 'name': 'new_cat1'},
+        {'category_id': 101, 'name': 'new_cat2'},
+        {'category_id': 114, 'name': 'new_cat3'},
+        {'category_id': 117, 'name': 'new_cat4'}
+    ])
+    def add_events(self):
+        """Collect fake users, load into DB."""
+        with session_scope() as session:
+            with open('tests/fixtures/users.json') as infile:
+                users = json.load(infile)
+
+            for u in users:
+                q = psql.insert(User).values(
+                    id=u['id'],
+                    given_name=u['given_name'],
+                    surname=u['surname']
+                )
                 session.execute(q)
 
     def __call__(self, f):
