@@ -8,10 +8,11 @@ from geoalchemy2 import WKTElement
 
 from sanic import Blueprint
 from sanic.exceptions import abort
-from sanic.response import json
+from sanic.response import html, json, redirect
 
 import ujson
 
+from beluga import auth, config
 from beluga.models import session_scope, Event, Category
 from beluga.auth import authorized
 from beluga import config
@@ -28,8 +29,8 @@ async def healthcheck(request):
 
 
 # User routes.
-@authorized()
 @api.route('/users/self', ['GET'])
+@authorized()
 async def get_self(request):
     """
     @api {get} /users/self Retrieve the currently logged in user.
@@ -44,10 +45,44 @@ async def get_self(request):
     """
     raise abort(501, 'not implemented')
 
+@api.route('/sessions', ['POST'])
+async def create_session(request):
+    """
+    @api {post} /sessions Create a new session.
+    @apiName CreateSession
+    @apiGroup Users
+
+    @apiDescription Create a new session using the specified service.
+                    This route should be opened in a web view on the
+                    client. A JSON object containing the key `token`
+                    will be returned. This token is a bearer token
+                    to be used in future API requests.
+    
+    @apiParam {String} service The service identifier, as described
+        in the API documentation.
+    @apiParam {String} token The token from the service, used to
+        authenticate the user.
+    """
+
+    try:
+        service = request.json['service']
+        service_token = request.json['token']
+    except KeyError:
+        raise abort(400)
+
+    if service == auth.GOOGLE_SERVICE_ID:
+        token = await auth.google(service_token)
+    else:
+        raise abort(404, "the specified service was not found")
+
+    if token is None:
+        raise abort(403)
+
+    return json({ 'token': token })
 
 # Event routes.
-@authorized()
 @api.route('/events', ['GET'])
+@authorized()
 async def event_handler(request):
     """
     @api {get} /events Retrieve a listing of events.
@@ -162,8 +197,8 @@ async def event_handler(request):
             } for e in event_query.limit(limit)]})
 
 
-@authorized()
 @api.route('/events/<uuid>/rsvp', ['POST', 'DELETE'])
+@authorized()
 async def rsvp_handler(request, uuid):
     """
     @api {post} /events/:uuid/rsvp RSVP to an event.

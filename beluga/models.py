@@ -57,8 +57,14 @@ class User(Base):
     id = sa.Column(sa.BigInteger, primary_key=True)
     given_name = sa.Column(sa.String(75))
     surname = sa.Column(sa.String(75))
-    logins = sa.Column(sa.types.JSON)
     avatar = sa.Column(sa.String(200))
+
+    # Only supporting one service for now
+    # Seperating columns so we can look up by (service, uid)
+    login_service = sa.Column(sa.types.String(50))
+    login_uid = sa.Column(sa.types.String(75))
+    login_secret = sa.Column(sa.types.JSON) # Seperate security level for secrets
+    login_info = sa.Column(sa.types.JSON)
 
     def __str__(self):
         return '<[{}] User {} {}>'.format(
