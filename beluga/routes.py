@@ -15,7 +15,7 @@ from sanic.response import html, json, redirect
 import ujson
 
 from beluga import auth, config
-from beluga.models import session_scope, Event
+from beluga.models import session_scope, Event, Category
 from beluga.auth import authorized
 from beluga import config
 

@@ -14,7 +14,7 @@ def test_write_event():
         start_time=dt.datetime(2016, 5, 5, 1, 2),
         end_time=dt.datetime(2016, 5, 5, 1, 7),
         location=WKTElement('POINT(1 2)', srid=4326),
-        category_id="1"
+        category_id=1
     )
 
     with session_scope() as db_session:

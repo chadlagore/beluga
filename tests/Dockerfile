@@ -11,4 +11,6 @@ ADD . /app/
 
 WORKDIR /app/
 
+ENV BELUGA_TEST true
+
 CMD pytest -vvv
