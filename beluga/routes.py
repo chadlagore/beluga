@@ -6,8 +6,6 @@ from asyncio import AbstractEventLoop
 
 from geoalchemy2 import WKTElement
 
-import os
-
 from sanic import Blueprint
 from sanic.exceptions import abort
 from sanic.response import html, json, redirect

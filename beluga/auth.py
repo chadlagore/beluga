@@ -5,10 +5,8 @@ from beluga.models import session_scope, User
 
 from functools import wraps
 
-from google.oauth2 import id_token, credentials
+from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
-import google_auth_oauthlib.flow
-import googleapiclient.discovery
 
 from itsdangerous import Signer, BadSignature
 
@@ -92,7 +90,7 @@ async def google(token):
 
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('bad issuer in token')
-    except ValueError or KeyError:
+    except (ValueError, KeyError):
         # Bad token! Bail out!
         return None
 
@@ -106,7 +104,7 @@ async def google(token):
             User.login_service == GOOGLE_SERVICE_ID,
             User.login_uid == uid
         )
-        
+
         if db_session.query(query.exists()).scalar():
             user = query.first()
         else:
@@ -146,5 +144,5 @@ def unsign(sig_type, signed):
 
     if state['type'] != sig_type:
         raise Exception("signature type mismatch")
-    
+
     return state['val']
