@@ -113,7 +113,7 @@ class mock_users:
         {'category_id': 114, 'name': 'new_cat3'},
         {'category_id': 117, 'name': 'new_cat4'}
     ])
-    def add_events(self):
+    def add_users(self):
         """Collect fake users, load into DB."""
         with session_scope() as session:
             with open('tests/fixtures/users.json') as infile:
@@ -129,6 +129,6 @@ class mock_users:
 
     def __call__(self, f):
         def wrapped_f(*args):
-            self.add_events()
+            self.add_users()
             f(*args)
         return wrapped_f
