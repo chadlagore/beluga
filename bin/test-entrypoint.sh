@@ -1,6 +1,8 @@
 #!/bin/bash
 # Script stalls dev container until db comes up.
 
+set -e
+
 RET=1
 echo "Waiting for database"
 while ! pg_isready -h postgres -d beluga -U beluga; do
@@ -9,4 +11,5 @@ while ! pg_isready -h postgres -d beluga -U beluga; do
 done
 
 # Run tests.
-pytest -vvv --cov=beluga --cov=worker
+py.test --cov=./ -vvv --cov-report term-missing
+coveralls
