@@ -39,8 +39,9 @@ def authorized():
         @wraps(f)
         async def decorated_function(request, *args, **kwargs):
             # Check for authorization.
-            if check_request_for_auth_status(request):
-                response = await f(request, *args, **kwargs)
+            user = check_request_for_auth_status(request)
+            if user:
+                response = await f(request, user, *args, **kwargs)
                 return response
 
             else:
@@ -87,9 +88,12 @@ def check_request_for_auth_status(request):
     with session_scope() as db_session:
         query = db_session.query(User).filter(User.id == user_id)
         exists = db_session.query(query.exists()).scalar()
-        import logging
-        logging.info(str(exists))
-        return exists
+        if not exists:
+            return None
+        else:
+            user = query.first()
+            db_session.expunge(user)
+            return user
 
 async def google(token):
     """Create a session using a Google OAuth2 token"""
@@ -122,7 +126,7 @@ async def google(token):
                 avatar=avatar,
                 login_service=GOOGLE_SERVICE_ID,
                 login_uid=uid,
-                login_info=user_info
+                login_info=idinfo
             )
             db_session.add(user)
             db_session.commit()

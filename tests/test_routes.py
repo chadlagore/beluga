@@ -4,7 +4,9 @@ from beluga import app
 from tests.utils import (
     mock_events,
     add_db_categories,
-    new_db
+    new_db,
+    mock_users,
+    magic_bearer_token # Contains a token we can use to authenticate requests
 )
 
 
@@ -111,22 +113,6 @@ def test_good_limit():
     assert len(response.json) == 1
 
 
-def test_rsvp_post_exists():
-    route = '/events/abcdef/rsvp'
-    _, response = app.test_client.post(route, headers={
-        'Authorization': 'Bearer GOOD_TEST_TOKEN'
-    })
-    assert response.status == 501
-
-
-def test_rsvp_delete_exists():
-    route = '/events/abcdef/rsvp'
-    _, response = app.test_client.delete(route, headers={
-        'Authorization': 'Bearer GOOD_TEST_TOKEN'
-    })
-    assert response.status == 501
-
-
 @new_db()
 @add_db_categories([{'category_id': 117, 'name': 'new_cat1'}])
 def test_category_endpoint():
@@ -154,3 +140,59 @@ def test_category_filter():
     })
     assert len(response.json['results']) == 1
     assert response.json['results'][0]['category'] == 'new_cat2'
+
+@new_db()
+@mock_events()
+@mock_users()
+def test_create_rsvp():
+    route = '/events/27489090610/rsvp'
+    _, response = app.test_client.post(route, headers={
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
+    })
+    assert response.status == 204
+
+    # Do it again, it should be idempotent
+    _, response = app.test_client.post(route, headers={
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
+    })
+    assert response.status == 204
+
+@new_db()
+@mock_events()
+@mock_users()
+def test_delete_rsvp():
+    route = '/events/27489090610/rsvp'
+    _, response = app.test_client.delete(route, headers={
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
+    })
+    assert response.status == 204
+
+    # Do it again, it should be idempotent
+    _, response = app.test_client.delete(route, headers={
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
+    })
+    assert response.status == 204
+
+@new_db()
+@mock_events()
+@mock_users()
+def test_retreive_rsvp():
+    # Create the RSVP
+    route = '/events/27489090610/rsvp'
+    _, response = app.test_client.delete(route, headers={
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
+    })
+    assert response.status == 204
+
+    _, response = app.test_client.get('/events', headers={
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
+    })
+    assert response.status == 200
+
+    for e in response.json['results']:
+        if e['id'] == '27489090610':
+            assert len(e['attendees']) == 1
+        else:
+            assert len(e['attendees']) == 0
+
+
