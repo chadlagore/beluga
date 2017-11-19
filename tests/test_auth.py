@@ -1,7 +1,8 @@
-import ujson as json
-
 from beluga import app
-from tests.utils import mock_users
+from tests.utils import (
+    mock_users,
+    magic_bearer_token
+)
 
 def test_bad_google_session():
     _, response = app.test_client.post('/sessions', json={
@@ -16,7 +17,7 @@ def test_bad_google_session():
 def test_good_bearer_token():
     _, response = app.test_client.get('/users/self', headers={
         # User ID 1, signed with secret base in test Dockerfile
-        'Authorization': 'Bearer eyJ0eXBlIjogImJlYXJlciIsICJ2YWwiOiAxfS5kYUhSY2F4eXYtUTNkNmpZM2tmNXRfdEl1NEk='
+        'Authorization': 'Bearer {}'.format(magic_bearer_token)
     })
 
     # We should be told that this functionality is unimplemented
