@@ -8,6 +8,8 @@ from beluga.models import (
 )
 from worker import prepare_event
 
+# UID 1, signed with secret base in dockerfile
+magic_bearer_token = str('eyJ0eXBlIjogImJlYXJlciIsICJ2YWwiOiAxfS5kYUhSY2F4eXYtUTNkNmpZM2tmNXRfdEl1NEk=')
 
 class new_db:
     """A decorator for clearing the database before and
@@ -105,14 +107,6 @@ class mock_users:
     def __init__(self):
         pass
 
-    # Have to add the categoies before loading events
-    # due to foreign key constraint.
-    @add_db_categories([
-        {'category_id': 102, 'name': 'new_cat1'},
-        {'category_id': 101, 'name': 'new_cat2'},
-        {'category_id': 114, 'name': 'new_cat3'},
-        {'category_id': 117, 'name': 'new_cat4'}
-    ])
     def add_users(self):
         """Collect fake users, load into DB."""
         with session_scope() as session:

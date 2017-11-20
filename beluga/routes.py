@@ -8,12 +8,12 @@ from geoalchemy2 import WKTElement
 
 from sanic import Blueprint
 from sanic.exceptions import abort
-from sanic.response import html, json, redirect
+from sanic.response import json, raw
 
 import ujson
 
 from beluga import auth, config
-from beluga.models import session_scope, Event, Category
+from beluga.models import session_scope, Event, Category, User
 from beluga.auth import authorized
 from beluga import config
 
@@ -31,7 +31,7 @@ async def healthcheck(request):
 # User routes.
 @api.route('/users/self', ['GET'])
 @authorized()
-async def get_self(request):
+async def get_self(request, user):
     """
     @api {get} /users/self Retrieve the currently logged in user.
     @apiName Self
@@ -43,7 +43,7 @@ async def get_self(request):
         the user.
     @apiSuccess {String} avatar A URL to an avatar image.
     """
-    raise abort(501, 'not implemented')
+    raise abort(501)
 
 @api.route('/sessions', ['POST'])
 async def create_session(request):
@@ -83,7 +83,7 @@ async def create_session(request):
 # Event routes.
 @api.route('/events', ['GET'])
 @authorized()
-async def event_handler(request):
+async def event_handler(request, user):
     """
     @api {get} /events Retrieve a listing of events.
     @apiName Events
@@ -145,12 +145,12 @@ async def event_handler(request):
         lat = float(lat)
         lon = float(lon)
     except ValueError:
-        abort(400, 'radius, lat and lon must be numeric')
+        raise abort(400, 'radius, lat and lon must be numeric')
 
     try:
         limit = int(limit)
     except ValueError:
-        abort(400, f'limit {limit} must be numeric')
+        raise abort(400, f'limit {limit} must be numeric')
 
     category = request.args.get('category', None)
 
@@ -160,11 +160,13 @@ async def event_handler(request):
 
     with session_scope() as db_session:
         cols = [
+            Event.id,
             Event.title,
             Event.description_html,
             Event.description_text,
             Event.start_time,
             Event.end_time,
+            Event.attendees,
             Event.location.ST_AsGeoJSON().label("location_json"),
             Category.name.label('category'),
             distance_col
@@ -184,6 +186,12 @@ async def event_handler(request):
         if category:
             event_query = event_query.filter(Category.name == category)
 
+        attendee_cols = [
+            User.given_name,
+            User.surname,
+            User.avatar
+        ]
+
         # Format according to API spec, not DB schema
         return json({'results': [{
                 'title': e.title,
@@ -193,13 +201,21 @@ async def event_handler(request):
                 'start_time': e.start_time.astimezone(tz.utc).isoformat(),
                 'end_time': e.end_time.astimezone(tz.utc).isoformat(),
                 'distance': e.distance,
-                'category': e.category
+                'category': e.category,
+                'id': e.id,
+                'attendees': map(lambda u: {
+                        'given_name': u.given_name,
+                        'surname': u.surname,
+                        'avatar': u.avatar
+                    }, map(lambda uid: db_session.query(*attendee_cols) \
+                            .filter(User.id == uid).first(),
+                        (e.attendees or [])))
             } for e in event_query.limit(limit)]})
 
 
 @api.route('/events/<uuid>/rsvp', ['POST', 'DELETE'])
 @authorized()
-async def rsvp_handler(request, uuid):
+async def rsvp_handler(request, user, uuid):
     """
     @api {post} /events/:uuid/rsvp RSVP to an event.
 
@@ -227,25 +243,57 @@ async def rsvp_handler(request, uuid):
 
     @apiParam {Number} uuid Event unique ID.
     """
-    raise abort(501, 'not implemented')
+    # Retrieve requested event
+    with session_scope() as db_session:
+        query = db_session.query(Event).filter(Event.id == uuid)
+        event = query.one_or_none()
 
+        if event is None:
+            raise abort(404, "the event was not found")
+
+        # Acquire current attendee list
+        if event.attendees is None:
+            attendees = []
+        else:
+            attendees = event.attendees
+
+        # Update attendee list
+        if request.method == "POST":
+            attendees = await post_rsvp(user, attendees)
+        elif request.method == "DELETE":
+            attendees = await delete_rsvp(user, attendees)
+        else:
+            raise abort(500)
+
+        # Record update in database
+        query.update({Event.attendees: attendees})
+
+    return raw(b'', status=204)
 
 # Helper functions
-async def delete_rsvp(token, uuid):
+async def delete_rsvp(user, attendees):
     """DELETE RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to False.
     """
-    pass
+    try:
+        attendees.remove(user.id)
+    except ValueError:
+        # The user wasn't attending the event anyway, so it doesn't matter
+        pass
+    return attendees
 
-
-async def post_rsvp(token, uuid):
+async def post_rsvp(user, attendees):
     """POST RSVP handler.
     Sets the authorized user's RSVP status
     on the event specified by `uuid` to True.
     """
-    pass
-
+    try:
+        attendees.index(user.id)
+    except ValueError:
+        # The user wasn't attending the event, so we need to add them
+        attendees.append(user.id)
+    return attendees
 
 def geojson_to_latlon(geojson):
     """Convert from GeoJSON to API lat/lon format"""
@@ -256,7 +304,6 @@ def geojson_to_latlon(geojson):
         'lat': geo['coordinates'][1],
         'lon': geo['coordinates'][0]
     }
-
 
 @authorized()
 @api.route('/categories', ['GET'])
