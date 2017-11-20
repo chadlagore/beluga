@@ -25,7 +25,15 @@ def test_good_bearer_token():
 
 def test_bad_bearer_token():
     _, response = app.test_client.get('/users/self', headers={
-        'Authorization': 'Bearer BAD_TEST_TOKEN'
+        'Authorization': 'Bearer nonsense token'
+    })
+
+    # We should be told we aren't allowed
+    assert response.status == 403
+
+def test_empty_bearer_token():
+    _, response = app.test_client.get('/users/self', headers={
+        'Authorization': 'Bearer '
     })
 
     # We should be told we aren't allowed
