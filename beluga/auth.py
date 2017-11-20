@@ -77,7 +77,7 @@ def check_request_for_auth_status(request):
             return False
 
     # Make sure we have a token
-    if bearer_token is None or len(bearer_token) < 0:
+    if bearer_token is None or len(bearer_token) <= 0:
         return False
 
     # Validate signature
