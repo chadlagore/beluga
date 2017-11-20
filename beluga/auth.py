@@ -85,7 +85,7 @@ def check_request_for_auth_status(request):
     #     return False
     if len(bearer_token) > 0:
         return True
-    else
+    else:
         return False
 
     # Validate user exists
